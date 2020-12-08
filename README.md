@@ -66,3 +66,23 @@ optional arguments:
 
 
 ## Example
+#### input file
+
+| sequence | mhc | bind |
+|---|---|---|
+| HLPETKFSEL | B*07:02 | 1.0 |
+| NAPWAVTSL | B*07:02 | 1.0 |
+| VNLPINGNGKQ | B*07:02 | 1.0 |
+
+#### output file
+
+| sequence | mhc | bind | score |
+|---|---|---|---|
+| HLPETKFSEL | B*07:02 | 1.0 | 0.71 |
+| NAPWAVTSL | B*07:02 | 1.0 | 0.92 |
+| VNLPINGNGKQ | B*07:02 | 1.0 | 0.97 |
+
+#### interpretation figure
+In highlighted residues figures, the value of amino acids above 0 means the allele has those positive residues. In contrast, the value below 0 means the allele has  those negative residues which do not support the interpretation.
+
+<p align="center"><img src="example/output/interpretation/B0702.png" alt="" width="600"></p>
