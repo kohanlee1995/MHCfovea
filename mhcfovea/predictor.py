@@ -1,4 +1,4 @@
-import os, sys, re, json, importlib, random, copy, argparse
+import os, sys, re, json, importlib, random, copy, argparse, pickle
 import numpy as np
 import pandas as pd
 from collections import OrderedDict 
@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
 import logomaker as lm
 from util import *
 import warnings
@@ -90,15 +91,120 @@ class Predictor():
         return df.values
 
 
-def GetSeqlogoDF(seqs: pd.Series, sub_motif_len=4):
-    aa_str = 'ACDEFGHIKLMNPQRSTVWY'
-    seqs = seqs.apply(lambda x: x[:sub_motif_len] + x[-sub_motif_len:])
-    df = pd.DataFrame(columns=list(aa_str))
-    seqlogo_df = lm.alignment_to_matrix(sequences=seqs, to_type='information', characters_to_ignore='XU.')
-    df = pd.concat([df, seqlogo_df], axis=0)
-    df = df[list(aa_str)]
-    df = df.fillna(0.0)
-    return df
+class Interpretation():
+    def __init__(self, interpretation_file, mhc_dict, output_dir):
+        self.aa_str = 'ACDEFGHIKLMNPQRSTVWY'
+        self.sub_motif_len = 4
+        self.dpi = 600
+        self.fontsize = 10
+        
+        self.interp_dict = pickle.load(open(interpretation_file, 'rb'))
+        self.positions = self.interp_dict['important_positions']
+        self.mhc_dict = mhc_dict
+        self.output_dir = output_dir
+        if not os.path.isdir(output_dir):
+            os.mkdir(output_dir)
+
+
+    def __call__(self, allele, seqs):
+        hla = allele.split('*')[0]
+        motif_df = self._get_motif_seqlogo(seqs, self.sub_motif_len)
+        allele_df = self._get_allele_seqlogo(allele)
+
+        fig, ax = plt.subplots(4, 2, figsize=(8, 10), dpi=self.dpi,
+                                 gridspec_kw={'width_ratios': [1, 3]})
+        current_ax = 0
+
+        for side in ['N', 'C']:
+            try:
+                cluster = self.interp_dict['%s%s_label'%(hla, side)][allele]
+            except:
+                print("%s not in interpretation database"%allele)
+                return
+            hyper_motif = self.interp_dict['%s%s_hyper_motif'%(hla, side)][cluster]
+            hyper_motif = pd.DataFrame(hyper_motif, columns=list(self.aa_str))
+            allele_signature = self.interp_dict['%s%s_allele_signature'%(hla, side)][cluster]
+            allele_signature = pd.DataFrame(allele_signature, columns=list(self.aa_str))
+
+            # plot cluster
+            self._motif_plot(hyper_motif, side, ax[current_ax][0], title='%s, %s-side hyper-motif'%(allele, side))
+            self._mhcseq_plot(allele_signature, ax[current_ax][1], title='%s, %s-side allele signature'%(allele, side))
+            current_ax += 1
+
+            # plot allele itself
+            if side == 'N':
+                temp_df = motif_df.iloc[:4]
+            else:
+                temp_df = motif_df.iloc[-4:].reset_index(drop=True)
+            self._motif_plot(temp_df, side, ax[current_ax][0], title='%s, %s-side motif, num=%d'%(allele, side, len(seqs)))
+            self._mhcseq_plot(allele_df * allele_signature, ax[current_ax][1], title='%s, %s-side highlighted residues'%(allele, side))
+            current_ax += 1
+
+        fig.tight_layout()
+        fig.savefig('%s/%s%s%s.png'%(self.output_dir, hla, allele[2:4], allele[5:]))
+
+        return motif_df
+
+
+    def _get_motif_seqlogo(self, seqs, sub_motif_len):
+        seqs = seqs.apply(lambda x: x[:sub_motif_len] + x[-sub_motif_len:])
+        seqlogo_df = lm.alignment_to_matrix(sequences=seqs, to_type='information', characters_to_ignore='XU.')
+        df = pd.DataFrame(columns=list(self.aa_str))
+        df = pd.concat([df, seqlogo_df], axis=0)
+        df = df[list(self.aa_str)]
+        df = df.fillna(0.0)
+        return df
+
+
+    def _get_allele_seqlogo(self, allele):
+        seq = self.mhc_dict[allele]
+        seq = ''.join([seq[i] for i in self.positions])
+        seqlogo_df = lm.alignment_to_matrix(sequences=[seq], to_type='probability', characters_to_ignore=".XU", pseudocount=0)
+        df = pd.DataFrame(columns=list(self.aa_str))
+        df = pd.concat([df, seqlogo_df], axis=0)
+        df = df[list(self.aa_str)]
+        df = df.fillna(0.0)
+        return df
+
+
+    def _motif_plot(self, seqlogo_df, side, ax, ylim=4, title=None, turn_off_label=False):
+        if side == 'N':
+            xticklabels = list(range(1, self.sub_motif_len+1))
+        else:
+            xticklabels = list(range(-self.sub_motif_len, 0))
+        logo = lm.Logo(seqlogo_df, color_scheme='skylign_protein', ax=ax)
+        _ = ax.set_xticks(list(range(len(xticklabels))))
+        _ = ax.set_xticklabels(xticklabels)
+        _ = ax.set_ylim(0,ylim)
+        _ = ax.set_title(title)
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(self.fontsize)
+            
+        if turn_off_label:
+            _ = ax.set_xticks([])
+            _ = ax.set_yticks([])
+            _ = ax.set_xticklabels([])
+            _ = ax.set_yticklabels([])
+            _ = ax.set_title(None)
+
+
+    def _mhcseq_plot(self, seqlogo_df, ax, ylim=1, title=None, turn_off_label=False):
+        logo = lm.Logo(seqlogo_df, color_scheme='skylign_protein', ax=ax)
+        _ = ax.set_ylim(-ylim, ylim)
+        _ = ax.set_xticks(range(len(self.positions)))
+        _ = ax.set_xticklabels([i+1 for i in self.positions], rotation=90)
+        _ = ax.set_title(title)
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(self.fontsize)
+        for item in ax.get_xticklabels():
+            item.set_fontsize(self.fontsize-3)
+            
+        if turn_off_label:
+            _ = ax.set_xticks([])
+            _ = ax.set_yticks([])
+            _ = ax.set_xticklabels([])
+            _ = ax.set_yticklabels([])
+            _ = ax.set_title(None)
 
 
 def ArgumentParser():
@@ -115,7 +221,8 @@ def ArgumentParser():
     Output directory contains:
     1. prediction.csv: with new column "score" for specific mode or [allele] for general mode
     2. motif.npy: dictionary with allele as key and motif array as value (number of positive samples >= 10)
-    3. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
+    3. interpretation: a directory contains interpretation figure of each allele
+    4. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
     '''
     parser = argparse.ArgumentParser(prog='predictor', description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -137,9 +244,11 @@ if __name__=="__main__":
 
     # data
     mhc_file = '../data/MHCI_res182_seq.json'
+    mhc_dict = json.load(open(mhc_file, 'r'))
     peptide_dataframe = args.input
     alleles = args.alleles
     encoding_method = 'onehot'
+    interpretation_file = '../data/interpretation.pkl'
 
     # model
     model_file = 'model.py'
@@ -154,6 +263,9 @@ if __name__=="__main__":
     # mkdir output_dir
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
+
+    # interpretation
+    interp = Interpretation(interpretation_file, mhc_dict, '%s/interpretation'%output_dir)
 
 
     """""""""""""""""""""""""""""""""""""""""
@@ -174,13 +286,13 @@ if __name__=="__main__":
     ## check column "sequence"
     if 'sequence' not in df.columns:
         print('input file has no peptide sequence column; column name has to be "sequence" or "peptide"')
-        return
+        raise ValueError
     cols = ['sequence']
     ## check column "mhc"
     if not args.alleles:
         if 'mhc' not in df.columns:
             print('input file has no MHC-I allele column; column name has to be "mhc" or "allele"')
-            return
+            raise ValueError
         df['mhc'] = df['mhc'].apply(lambda x: ConvertAllele(x))
         cols.append('mhc')
         alleles = list(df['mhc'].unique())
@@ -190,7 +302,7 @@ if __name__=="__main__":
     if get_metrics:
         if 'bind' not in df.columns:
             print('input file has no benchmark column; column name has to be "bind"')
-            return
+            raise ValueError
         cols.append('bind')
     df = df[cols]
     
@@ -198,14 +310,13 @@ if __name__=="__main__":
     dataset = BuildDataset(df, 'onehot', 15, with_label=get_metrics)
 
     # mhc encoding dict
-    mhc_dict = json.load(open(mhc_file, 'r'))
     mhc_encode_dict = dict()
     for allele in alleles:
         mhc_encode_dict[allele] = OneHotEncoder(mhc_dict[allele], 182, True)
 
     
     """""""""""""""""""""""""""""""""""""""""
-    # Prediction
+    # Prediction & Interpretation
     """""""""""""""""""""""""""""""""""""""""
     print("Predicting...")
 
@@ -225,7 +336,8 @@ if __name__=="__main__":
             # seqlogo
             idx = np.where(df[allele] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
-                seqlogo_dict[allele] = GetSeqlogoDF(df.iloc[idx]['sequence']).values
+                seqlogo_dict[allele] = interp(allele, df.iloc[idx]['sequence'])
+                #seqlogo_dict[allele] = GetSeqlogoDF(df.iloc[idx]['sequence']).values
 
             # metrics
             if get_metrics:
@@ -240,7 +352,8 @@ if __name__=="__main__":
         for allele, sub_df in df.groupby('mhc'):
             idx = np.where(sub_df['score'] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
-                seqlogo_dict[allele] = GetSeqlogoDF(sub_df.iloc[idx]['sequence']).values
+                seqlogo_dict[allele] = interp(allele, sub_df.iloc[idx]['sequence'])
+                #seqlogo_dict[allele] = GetSeqlogoDF(sub_df.iloc[idx]['sequence']).values
 
         # metrics
         if get_metrics:
