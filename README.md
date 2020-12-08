@@ -7,9 +7,9 @@ Model Architecture:
 <p align="center"><img src="figures/model_architecture.png" alt="" width="600"></p>
 
 
-In addition to binding prediction, MHCfovea provides an interpretation of the relation between MHC-I sequences and epitop-binding motifs. We apply ScoreCAM on our model to select important positions of MHC-I sequences, and expand unobserved alleles by prediction to build clusters of MHC-I-peptide binding. Each cluster contains a hyper-motif, representing the preference of epitope binding, and an allele signature, representing the pattern of MHC-I sequences. For each queried allele, the epitope-binding motif and important MHC-I residues are reported. The epitope-binding motif is built from an independent dataset where peptides with prediction scores over 0.9 are used to generate the motif. The important MHC-I residues are calculated from the allele signature. Only residues simultaneously present in the target allele and positive part of the allele signature are highlighted.
+In addition to binding prediction, MHCfovea provides an interpretation of the relation between MHC-I sequences and epitop-binding motifs. We apply ScoreCAM on our model to select important positions of MHC-I sequences, and expand unobserved alleles by prediction to build clusters of MHC-I-peptide binding. Each HLA group on 2-digit level (eg. A*01) has 50 alleles maximally during the process of allele expansion. Only alleles in the expansion list is available for interpretation. The cluster contains a hyper-motif, representing the preference of epitope binding, and an allele signature, representing the pattern of MHC-I sequences. For each queried allele, the epitope-binding motif and highlighted MHC-I residues are reported. The epitope-binding motif is calculated from the input file, and the highlighted residues are consensus residues of the queried allele and allele signature.
 
-Interpretation of HLA-B:
+Interpretation clusters of HLA-B:
 
 <p align="center"><img src="figures/interpretation_hla_b.png" alt="" width="600"></p>
 
@@ -30,6 +30,39 @@ pip3 install -r requirements.txt
 ```
 
 ## Usage
+```
+usage: predictor [-h] [--alleles ALLELES] [--motif_threshold MOTIF_THRESHOLD]
+                 [--get_metrics]
+                 input output_dir
+
+    MHCfovea, an MHCI-peptide binding predictor
+    In this prediction process, GPU is recommended
+    Having two modes:
+    1. specific mode: each peptide has its corresponding MHC-I allele in the input file; column "mhc" or "allele" is required
+    2. general mode: all peptides are predicted with all alleles in the "alleles" argument
+    Input file:
+    only .csv file is acceptable
+    column "sequence" or "peptide" is required as peptide sequences
+    column "mhc" or "allele" is optional as MHC-I alleles
+    Output directory contains:
+    1. prediction.csv: with new column "score" for specific mode or [allele] for general mode
+    2. motif.npy: dictionary with allele as key and motif array as value (number of positive samples >= 10)
+    3. interpretation: a directory contains interpretation figure of each allele
+    4. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
+
+
+positional arguments:
+  input                 The input file
+  output_dir            The output directory
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --alleles ALLELES     alleles for general mode
+  --motif_threshold MOTIF_THRESHOLD
+                        prediction threshold for epitope-binding motifs,
+                        default=0.9
+  --get_metrics         calculate the metrics between prediction and benchmark
+```
 
 
 ## Example
