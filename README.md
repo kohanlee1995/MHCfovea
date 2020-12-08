@@ -66,6 +66,11 @@ optional arguments:
 
 
 ## Example
+
+```
+python3 mhcfovea/predictor.py example/input.csv example/output --get_metrics
+```
+
 #### input file
 
 | sequence | mhc | bind |
