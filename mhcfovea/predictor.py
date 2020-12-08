@@ -13,9 +13,9 @@ warnings.filterwarnings('ignore')
 
 
 class Predictor():
-    def __init__(self, mhc_encode_file, model_file, model_state_files, encoding_method):
+    def __init__(self, mhc_encode_dict, model_file, model_state_files, encoding_method):
         # MHC binding domain encoding
-        self.mhc_encode_dict = np.load(mhc_encode_file, allow_pickle=True)[()]
+        self.mhc_encode_dict = mhc_encode_dict
 
         # device: gpu or cpu
         if torch.cuda.is_available():
@@ -103,37 +103,28 @@ def GetSeqlogoDF(seqs: pd.Series, sub_motif_len=4):
 
 def ArgumentParser():
     description = '''
-    MHCI-peptide binding prediction
+    MHCfovea, an MHCI-peptide binding predictor
+    In this prediction process, GPU is recommended
     Having two modes:
-    1. specific mode: peptide file must contain "mhc" column
-    2. general mode: use the "alleles" argument for all peptides
+    1. specific mode: each peptide has its corresponding MHC-I allele in the input file; column "mhc" or "allele" is required
+    2. general mode: all peptides are predicted with all alleles in the "alleles" argument
+    Input file:
+    only .csv file is acceptable
+    column "sequence" or "peptide" is required as peptide sequences
+    column "mhc" or "allele" is optional as MHC-I alleles
     Output directory contains:
     1. prediction.csv: with new column "score" for specific mode or [allele] for general mode
     2. motif.npy: dictionary with allele as key and motif array as value (number of positive samples >= 10)
-    3. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV)
-    4. tmp_prediction.csv: prediction of all models
-    5. record.json: recording arguments
+    3. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
     '''
     parser = argparse.ArgumentParser(prog='predictor', description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    
-    data_args = parser.add_argument_group('Data Arguments')
-    data_args.add_argument('--mhc_encode_file', required=True, help='MHCI sequence encoding file')
-    data_args.add_argument('--peptide_dataframe', required=True, help='csv file, contains "sequence" and "mhc" columns')
-    data_args.add_argument('--peptide_dataset', required=False, default=None, help='dataset file built from the "BuildDataset" function in "util.py", default=None')
-    data_args.add_argument('--encoding_method', required=False, type=str, default='onehot', help='onehot or blosum, default=onehot')
-    data_args.add_argument('--alleles', required=False, default=None, help='alleles for all peptides, default=None')
 
-    model_args = parser.add_argument_group('Model Arguments')
-    model_args.add_argument('--model_file', required=True, help='model architecture file from the same directory')
-    model_args.add_argument('--model_state_dir', required=True, help='model state directory')
-    model_args.add_argument('--model_num', required=False, type=int, default=100, help='the number of model state used for prediction, default is all avaliable models')
-    
-    other_args = parser.add_argument_group('Other Arguments')
-    other_args.add_argument('--output_dir', required=True, help='output directory')
-    other_args.add_argument('--seqlogo_threshold', required=False, type=float, default=0.9, help='prediction threshold for building seqlogo dataframe, default=0.9')
-    other_args.add_argument('--get_metrics', required=False, default=False, action='store_true', help='calculate the metrics, and peptide data must have labels')
-    other_args.add_argument('--save_tmp', required=False, default=False, action='store_true', help='save temporary file')
+    parser.add_argument('input', help='The input file')
+    parser.add_argument('output_dir', help='The output directory')
+    parser.add_argument('--alleles', required=False, default=None, help='alleles for general mode')
+    parser.add_argument('--motif_threshold', required=False, default=0.9, help='prediction threshold for epitope-binding motifs, default=0.9')
+    parser.add_argument('--get_metrics', required=False, default=False, action='store_true', help='calculate the metrics between prediction and benchmark')
 
     return parser
 
@@ -145,23 +136,20 @@ if __name__=="__main__":
     args = ArgumentParser().parse_args()
 
     # data
-    mhc_encode_file = args.mhc_encode_file
-    peptide_dataframe = args.peptide_dataframe
-    peptide_dataset = args.peptide_dataset
-    encoding_method = args.encoding_method
+    mhc_file = '../data/MHCI_res182_seq.json'
+    peptide_dataframe = args.input
     alleles = args.alleles
-    
+    encoding_method = 'onehot'
+
     # model
-    model_file = args.model_file
-    model_state_dir = args.model_state_dir
-    model_num = args.model_num
-    
+    model_file = 'model.py'
+    model_state_dir = 'model_state'
+
     # others
     output_dir = args.output_dir
-    seqlogo_threshold = args.seqlogo_threshold
+    seqlogo_threshold = args.motif_threshold
     positive_threshold = 10
     get_metrics = args.get_metrics
-    save_tmp = args.save_tmp
 
     # mkdir output_dir
     if not os.path.isdir(output_dir):
@@ -178,25 +166,42 @@ if __name__=="__main__":
     for file in os.listdir(model_state_dir):
         model_state_files.append('%s/%s'%(model_state_dir, file))
     model_state_files.sort()
-    if model_num > len(model_state_files):
-        model_num = len(model_state_files)
-        print("model_num argument is more than the number of available models, so use all available models")
-    model_state_files = model_state_files[:model_num]
 
     # peptide dataframe
     df = pd.read_csv(peptide_dataframe)
+    df = df.rename(columns={'peptide':'sequence', 'peptides':'sequence', 'sequences':'sequence',
+                            'allele':'mhc', 'alleles':'mhc', 'binds':'bind'})
+    ## check column "sequence"
+    if 'sequence' not in df.columns:
+        print('input file has no peptide sequence column; column name has to be "sequence" or "peptide"')
+        return
     cols = ['sequence']
-    if not alleles:
+    ## check column "mhc"
+    if not args.alleles:
+        if 'mhc' not in df.columns:
+            print('input file has no MHC-I allele column; column name has to be "mhc" or "allele"')
+            return
         df['mhc'] = df['mhc'].apply(lambda x: ConvertAllele(x))
         cols.append('mhc')
+        alleles = list(df['mhc'].unique())
+    else:
+        alleles = [ConvertAllele(x) for x in args.alleles.split(',')]
+    ## check column "bind"
     if get_metrics:
+        if 'bind' not in df.columns:
+            print('input file has no benchmark column; column name has to be "bind"')
+            return
         cols.append('bind')
     df = df[cols]
     
-    if peptide_dataset:
-        dataset = torch.load(peptide_dataset)
-    else:
-        dataset = BuildDataset(df, 'onehot', 15, with_label=get_metrics)
+    # peptide dataset
+    dataset = BuildDataset(df, 'onehot', 15, with_label=get_metrics)
+
+    # mhc encoding dict
+    mhc_dict = json.load(open(mhc_file, 'r'))
+    mhc_encode_dict = dict()
+    for allele in alleles:
+        mhc_encode_dict[allele] = OneHotEncoder(mhc_dict[allele], 182, True)
 
     
     """""""""""""""""""""""""""""""""""""""""
@@ -205,22 +210,17 @@ if __name__=="__main__":
     print("Predicting...")
 
     # predictor
-    Pred = Predictor(mhc_encode_file, model_file, model_state_files, encoding_method)
+    Pred = Predictor(mhc_encode_dict, model_file, model_state_files, encoding_method)
 
     # seqlogo dict
     seqlogo_dict = dict()
 
     # general mode
-    if alleles:
+    if args.alleles:
         metrics_dict = dict()
-        for allele in tqdm(args.alleles.split(','), desc='alleles', leave=False, position=0):
-            allele = ConvertAllele(allele)
+        for allele in tqdm(alleles, desc='alleles', leave=False, position=0):
             pred_df = Pred(df, dataset, allele=allele)
             df[allele] = pred_df[list(Pred.models.keys())].mean(axis=1)
-            if save_tmp:
-                if get_metrics:
-                    pred_df['bind'] = df['bind']
-                pred_df.to_csv('%s/tmp_prediction_%s.csv'%(output_dir, allele[0]+allele[2:4]+allele[5:]))
 
             # seqlogo
             idx = np.where(df[allele] > seqlogo_threshold)[0]
@@ -235,10 +235,6 @@ if __name__=="__main__":
     else:
         pred_df = Pred(df, dataset)
         df['score'] = pred_df[list(Pred.models.keys())].mean(axis=1)
-        if save_tmp:
-            if get_metrics:
-                pred_df['bind'] = df['bind']
-            pred_df.to_csv('%s/tmp_prediction.csv'%output_dir)
         
         # seqlogo
         for allele, sub_df in df.groupby('mhc'):
@@ -261,17 +257,3 @@ if __name__=="__main__":
     np.save('%s/motif.npy'%output_dir, seqlogo_dict)
     if get_metrics:
         json.dump(metrics_dict, open('%s/metrics.json'%output_dir, 'w'))
-
-    # record
-    record_dict = dict({
-        'mhc_encode_file': mhc_encode_file,
-        'peptide_dataframe': peptide_dataframe,
-        'peptide_dataset': peptide_dataset,
-        'encoding_method': encoding_method,
-        'alleles': alleles,
-        'model_state_dir': model_state_dir,
-        'model_num': model_num,
-        'seqlogo_threshold': seqlogo_threshold
-        })
-
-    json.dump(record_dict, open('%s/record.json'%output_dir, 'w'))
