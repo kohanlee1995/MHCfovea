@@ -241,11 +241,13 @@ if __name__=="__main__":
     # Arguments
     """""""""""""""""""""""""""""""""""""""""
     args = ArgumentParser().parse_args()
+    current_dir = os.path.abspath(os.getcwd())
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     # data
     mhc_file = '../data/MHCI_res182_seq.json'
     mhc_dict = json.load(open(mhc_file, 'r'))
-    peptide_dataframe = args.input
+    peptide_dataframe = '%s/%s'%(current_dir, args.input)
     alleles = args.alleles
     encoding_method = 'onehot'
     interpretation_file = '../data/interpretation.pkl'
@@ -255,7 +257,7 @@ if __name__=="__main__":
     model_state_dir = 'model_state'
 
     # others
-    output_dir = args.output_dir
+    output_dir = '%s/%s'%(current_dir, args.output_dir)
     seqlogo_threshold = args.motif_threshold
     positive_threshold = 10
     get_metrics = args.get_metrics
