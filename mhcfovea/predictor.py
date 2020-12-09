@@ -346,7 +346,7 @@ def main(args=None):
             # seqlogo
             idx = np.where(df[allele] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
-                seqlogo_dict[allele] = Interp(allele, df.iloc[idx]['sequence'])
+                seqlogo_dict[allele] = Interp(allele, df.iloc[idx]['sequence']).values
 
             # metrics
             if get_metrics:
@@ -361,7 +361,7 @@ def main(args=None):
         for allele, sub_df in df.groupby('mhc'):
             idx = np.where(sub_df['score'] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
-                seqlogo_dict[allele] = Interp(allele, sub_df.iloc[idx]['sequence'])
+                seqlogo_dict[allele] = Interp(allele, sub_df.iloc[idx]['sequence']).values
 
         # metrics
         if get_metrics:
