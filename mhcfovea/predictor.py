@@ -1,4 +1,4 @@
-import os, sys, re, json, importlib, random, copy, argparse, pickle
+import os, sys, re, json, random, copy, argparse, pickle
 import numpy as np
 import pandas as pd
 from collections import OrderedDict 
@@ -127,8 +127,8 @@ class Interpretation():
             allele_signature = pd.DataFrame(allele_signature, columns=list(self.aa_str))
 
             # plot cluster
-            self._motif_plot(hyper_motif, side, ax[current_ax][0], title='%s, %s-side hyper-motif'%(allele, side))
-            self._mhcseq_plot(allele_signature, ax[current_ax][1], title='%s, %s-side allele signature'%(allele, side))
+            self._motif_plot(hyper_motif, side, ax[current_ax][0], title='%s-side hyper-motif'side)
+            self._mhcseq_plot(allele_signature, ax[current_ax][1], title='%s-side allele signature'%side)
             current_ax += 1
 
             # plot allele itself
@@ -236,18 +236,31 @@ def ArgumentParser():
     return parser
 
 
-if __name__=="__main__":
+def main(args=None):
     """""""""""""""""""""""""""""""""""""""""
     # Arguments
     """""""""""""""""""""""""""""""""""""""""
-    args = ArgumentParser().parse_args()
+    args = ArgumentParser().parse_args(args)
     current_dir = os.path.abspath(os.getcwd())
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    # input
+    if args.input.startswith('/'):
+        peptide_dataframe = args.input
+    else:
+        peptide_dataframe = '%s/%s'%(current_dir, args.input)
+
+    # output
+    if args.output_dir.startswith('/'):
+        output_dir = args.output_dir
+    else:
+        output_dir = '%s/%s'%(current_dir, args.output_dir)
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
 
     # data
     mhc_file = '../data/MHCI_res182_seq.json'
     mhc_dict = json.load(open(mhc_file, 'r'))
-    peptide_dataframe = '%s/%s'%(current_dir, args.input)
     alleles = args.alleles
     encoding_method = 'onehot'
     interpretation_file = '../data/interpretation.pkl'
@@ -257,17 +270,9 @@ if __name__=="__main__":
     model_state_dir = 'model_state'
 
     # others
-    output_dir = '%s/%s'%(current_dir, args.output_dir)
     seqlogo_threshold = args.motif_threshold
     positive_threshold = 10
     get_metrics = args.get_metrics
-
-    # mkdir output_dir
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir)
-
-    # interpretation
-    interp = Interpretation(interpretation_file, mhc_dict, '%s/interpretation'%output_dir)
 
 
     """""""""""""""""""""""""""""""""""""""""
@@ -325,6 +330,9 @@ if __name__=="__main__":
     # predictor
     Pred = Predictor(mhc_encode_dict, model_file, model_state_files, encoding_method)
 
+    # interpretation
+    Interp = Interpretation(interpretation_file, mhc_dict, '%s/interpretation'%output_dir)
+
     # seqlogo dict
     seqlogo_dict = dict()
 
@@ -338,8 +346,7 @@ if __name__=="__main__":
             # seqlogo
             idx = np.where(df[allele] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
-                seqlogo_dict[allele] = interp(allele, df.iloc[idx]['sequence'])
-                #seqlogo_dict[allele] = GetSeqlogoDF(df.iloc[idx]['sequence']).values
+                seqlogo_dict[allele] = Interp(allele, df.iloc[idx]['sequence'])
 
             # metrics
             if get_metrics:
@@ -354,8 +361,7 @@ if __name__=="__main__":
         for allele, sub_df in df.groupby('mhc'):
             idx = np.where(sub_df['score'] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
-                seqlogo_dict[allele] = interp(allele, sub_df.iloc[idx]['sequence'])
-                #seqlogo_dict[allele] = GetSeqlogoDF(sub_df.iloc[idx]['sequence']).values
+                seqlogo_dict[allele] = Interp(allele, sub_df.iloc[idx]['sequence'])
 
         # metrics
         if get_metrics:
@@ -372,3 +378,8 @@ if __name__=="__main__":
     np.save('%s/motif.npy'%output_dir, seqlogo_dict)
     if get_metrics:
         json.dump(metrics_dict, open('%s/metrics.json'%output_dir, 'w'))
+
+
+if __name__=="__main__":
+    main()
+    
