@@ -127,7 +127,7 @@ class Interpretation():
             allele_signature = pd.DataFrame(allele_signature, columns=list(self.aa_str))
 
             # plot cluster
-            self._motif_plot(hyper_motif, side, ax[current_ax][0], title='%s-side hyper-motif'side)
+            self._motif_plot(hyper_motif, side, ax[current_ax][0], title='%s-side hyper-motif'%side)
             self._mhcseq_plot(allele_signature, ax[current_ax][1], title='%s-side allele signature'%side)
             current_ax += 1
 
