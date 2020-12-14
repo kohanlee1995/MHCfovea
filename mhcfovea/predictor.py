@@ -209,21 +209,24 @@ class Interpretation():
 
 def ArgumentParser():
     description = '''
-    MHCfovea, an MHCI-peptide binding predictor
-    In this prediction process, GPU is recommended
+    MHCfovea, an MHCI-peptide binding predictor. In this prediction process, GPU is recommended.
+    
     Having two modes:
     1. specific mode: each peptide has its corresponding MHC-I allele in the input file; column "mhc" or "allele" is required
     2. general mode: all peptides are predicted with all alleles in the "alleles" argument
+    
     Input file:
     only .csv file is acceptable
     column "sequence" or "peptide" is required as peptide sequences
     column "mhc" or "allele" is optional as MHC-I alleles
+    
     Output directory contains:
     1. prediction.csv: with new column "score" for specific mode or [allele] for general mode
     2. motif.npy: dictionary with allele as key and motif array as value (number of positive samples >= 10)
     3. interpretation: a directory contains interpretation figure of each allele
     4. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
     '''
+    
     parser = argparse.ArgumentParser(prog='predictor', description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
