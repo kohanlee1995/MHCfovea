@@ -72,19 +72,53 @@ python3 mhcfovea/predictor.py example/input.csv example/output
 
 #### input file
 
-| sequence | mhc | bind |
-|---|---|---|
-| HLPETKFSEL | B*07:02 | 1.0 |
-| NAPWAVTSL | B*07:02 | 1.0 |
-| VNLPINGNGKQ | B*07:02 | 1.0 |
+| sequence | mhc |
+|---|---|
+| NAPWAVTSL | B*07:02 |
+| VNLPINGNGKQ | B*07:02 |
+| RVAEFHTEL | B*07:02 |
+| AAAGPGAAL | B*07:02 |
+| APAAIPAL | B*07:02 |
+| APAAYPREVAL | B*07:02 |
+| APAGGAGAL | B*07:02 |
+| APAGSIISL | B*07:02 |
+| APAPGAPLL | B*07:02 |
+| APAPGAPLLPL | B*07:02 |
+| APAPSRGSVQV | B*07:02 |
+| APAPSRGSVQVAL | B*07:02 |
+| APFGLKPRSV | B*07:02 |
+| APFLRIAF | B*07:02 |
+| APGDYGRQAL | B*07:02 |
+| APGEPGSAF | B*07:02 |
+| APGGGPGTL | B*07:02 |
+| APGPGLLL | B*07:02 |
+| APHDYGLIL | B*07:02 |
+| APHPSSWETL | B*07:02 |
 
 #### output file
 
-| sequence | mhc | bind | score |
-|---|---|---|---|
-| HLPETKFSEL | B*07:02 | 1.0 | 0.71 |
-| NAPWAVTSL | B*07:02 | 1.0 | 0.92 |
-| VNLPINGNGKQ | B*07:02 | 1.0 | 0.97 |
+| sequence | mhc | score |
+|---|---|---|
+| NAPWAVTSL | B*07:02 | 0.919 |
+| VNLPINGNGKQ | B*07:02 | 0.968 |
+| RVAEFHTEL | B*07:02 | 0.94 |
+| AAAGPGAAL | B*07:02 | 0.959 |
+| APAAIPAL | B*07:02 | 0.979 |
+| APAAYPREVAL | B*07:02 | 0.997 |
+| APAGGAGAL | B*07:02 | 0.998 |
+| APAGSIISL | B*07:02 | 0.997 |
+| APAPGAPLL | B*07:02 | 0.999 |
+| APAPGAPLLPL | B*07:02 | 0.999 |
+| APAPSRGSVQV | B*07:02 | 0.994 |
+| APAPSRGSVQVAL | B*07:02 | 0.992 |
+| APFGLKPRSV | B*07:02 | 0.961 |
+| APFLRIAF | B*07:02 | 0.913 |
+| APGDYGRQAL | B*07:02 | 0.995 |
+| APGEPGSAF | B*07:02 | 0.986 |
+| APGGGPGTL | B*07:02 | 0.983 |
+| APGPGLLL | B*07:02 | 0.943 |
+| APHDYGLIL | B*07:02 | 0.973 |
+| APHPSSWETL | B*07:02 | 0.989 |
 
 #### interpretation figure
 In highlighted residues figures, the value of amino acids above 0 means the allele has those positive residues. In contrast, the value below 0 means the allele has  those negative residues which do not support the interpretation.
