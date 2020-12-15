@@ -222,9 +222,8 @@ def ArgumentParser():
     
     Output directory contains:
     1. prediction.csv: with new column "score" for specific mode or [allele] for general mode
-    2. motif.npy: dictionary with allele as key and motif array as value (number of positive samples >= 10)
-    3. interpretation: a directory contains interpretation figure of each allele
-    4. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
+    2. interpretation: a directory contains interpretation figures of each allele with more than 10 positive predictions
+    3. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
     '''
     
     parser = argparse.ArgumentParser(prog='predictor', description=description,
@@ -344,7 +343,7 @@ def main(args=None):
         metrics_dict = dict()
         for allele in tqdm(alleles, desc='alleles', leave=False, position=0):
             pred_df = Pred(df, dataset, allele=allele)
-            df[allele] = pred_df[list(Pred.models.keys())].mean(axis=1)
+            df[allele] = pred_df[list(Pred.models.keys())].mean(axis=1).round(3)
 
             # seqlogo
             idx = np.where(df[allele] > seqlogo_threshold)[0]
@@ -358,7 +357,7 @@ def main(args=None):
     # specific mode
     else:
         pred_df = Pred(df, dataset)
-        df['score'] = pred_df[list(Pred.models.keys())].mean(axis=1)
+        df['score'] = pred_df[list(Pred.models.keys())].mean(axis=1).round(3)
         
         # seqlogo
         for allele, sub_df in df.groupby('mhc'):
@@ -377,10 +376,12 @@ def main(args=None):
     # Save result and record
     """""""""""""""""""""""""""""""""""""""""
     # result
-    df.to_csv('%s/prediction.csv'%output_dir)
-    np.save('%s/motif.npy'%output_dir, seqlogo_dict)
+    df.to_csv('%s/prediction.csv'%output_dir, index=False)
+    ##np.save('%s/motif.npy'%output_dir, seqlogo_dict)
     if get_metrics:
         json.dump(metrics_dict, open('%s/metrics.json'%output_dir, 'w'))
+
+    print('Done')
 
 
 if __name__=="__main__":

@@ -17,15 +17,14 @@ If you find MHCfovea useful in your research please cite:
 
 
 ## Installation
-1. Download/Clone MHCfovea
+1. Python3 is required
+2. Download/Clone MHCfovea
 ```
 git clone https://github.com/kohanlee1995/MHCfovea.git
 cd MHCfovea
 ```
-2. Install reqiured package
+3. Install reqiured package
 ```
-apt-get install python3
-apt-get install python3-pip
 pip3 install -r requirements.txt
 ```
 
@@ -35,22 +34,22 @@ usage: predictor [-h] [--alleles ALLELES] [--motif_threshold MOTIF_THRESHOLD]
                  [--get_metrics]
                  input output_dir
 
-    MHCfovea, an MHCI-peptide binding predictor. In this prediction process, GPU is recommended
-    
+    MHCfovea, an MHCI-peptide binding predictor. In this prediction process, GPU is recommended.
+
     Having two modes:
     1. specific mode: each peptide has its corresponding MHC-I allele in the input file; column "mhc" or "allele" is required
     2. general mode: all peptides are predicted with all alleles in the "alleles" argument
-    
+
     Input file:
     only .csv file is acceptable
     column "sequence" or "peptide" is required as peptide sequences
     column "mhc" or "allele" is optional as MHC-I alleles
-    
+
     Output directory contains:
     1. prediction.csv: with new column "score" for specific mode or [allele] for general mode
-    2. motif.npy: dictionary with allele as key and motif array as value (number of positive samples >= 10)
-    3. interpretation: a directory contains interpretation figure of each allele
-    4. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
+    2. interpretation: a directory contains interpretation figures of each allele with more than 10 positive predictions
+    3. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
+
 
 positional arguments:
   input                 The input file
@@ -60,8 +59,7 @@ optional arguments:
   -h, --help            show this help message and exit
   --alleles ALLELES     alleles for general mode
   --motif_threshold MOTIF_THRESHOLD
-                        prediction threshold for epitope-binding motifs,
-                        default=0.9
+                        prediction threshold for epitope-binding motifs, default=0.9
   --get_metrics         calculate the metrics between prediction and benchmark
 ```
 
@@ -69,7 +67,7 @@ optional arguments:
 ## Example
 
 ```
-python3 mhcfovea/predictor.py example/input.csv example/output --get_metrics
+python3 mhcfovea/predictor.py example/input.csv example/output
 ```
 
 #### input file
