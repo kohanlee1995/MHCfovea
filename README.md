@@ -1,17 +1,19 @@
 # MHCfovea
 
-MHCfovea is a pan-allele MHC-I-peptide binding predictor which takes MHC-I alleles and peptide sequences to predict the binding probability within 0 and 1. Our predictor is a convolution-based model trained on both binding assay data and ligand elution data from IEDB database. For MHC-I molecules, we use the peptide-binding cleft which is a 182-amino-acid long sequence composed of α-1 and α-2 regions as the encode of MHC-I alleles. As for peptides, any sequence within 8 to 15 amino acids long is available.
+MHCfovea is a pan-allele MHC-I-peptide binding predictor which takes MHC-I alleles and peptide sequences to predict the binding probability within 0 and 1. Our predictor is a convolution-based model trained on both binding assay data and ligand elution data from IEDB database. For MHC-I molecules, we use the peptide-binding cleft which is a 182-amino-acid sequence composed of α-1 and α-2 regions as the encode of MHC-I alleles. As for peptides, any sequence within 8 to 15 amino acids is available.
 
 Model Architecture:
 
 <p align="center"><img src="figures/model_architecture.png" alt="" width="600"></p>
 
 
-In addition to binding prediction, MHCfovea provides an interpretation of the relation between MHC-I sequences and epitop-binding motifs. We apply ScoreCAM on our model to select important positions of MHC-I sequences, and expand unobserved alleles by prediction to build clusters of MHC-I-peptide binding. Each HLA group on 2-digit level (eg. A*01) has 50 alleles maximally during the process of allele expansion. Only alleles in the expansion list is available for interpretation. The cluster contains a hyper-motif, representing the preference of epitope binding, and an allele signature, representing the pattern of MHC-I sequences. For each queried allele, the epitope-binding motif and highlighted MHC-I residues are reported. The epitope-binding motif is calculated from the input file, and the highlighted residues are consensus residues of the queried allele and allele signature.
+In addition to binding prediction, MHCfovea provides an interpretation of the relation between MHC-I sequences and epitop-binding motifs. We apply ScoreCAM on our model to select important positions of MHC-I sequences, and expand unobserved alleles by prediction to build clusters of MHC-I-peptide binding. The cluster contains a hyper-motif, representing the preference of epitope binding, and an allele signature, representing the pattern of MHC-I sequences. 
+
+For each queried allele, the epitope-binding motif and highlighted MHC-I residues are reported. The epitope-binding motif is calculated from the input file, and the highlighted residues are consensus residues of the queried allele and allele signature.
 
 Interpretation clusters of HLA-B:
 
-<p align="center"><img src="figures/interpretation_hla_b.png" alt="" width="600"></p>
+<p align="center"><img src="figures/interpretation_B.png" alt="" width="600"></p>
 
 If you find MHCfovea useful in your research please cite:
 
@@ -121,6 +123,6 @@ python3 mhcfovea/predictor.py example/input.csv example/output
 | APHPSSWETL | B*07:02 | 0.989 |
 
 #### interpretation figure
-In highlighted residues figures, the value of amino acids above 0 means the allele has those positive residues. In contrast, the value below 0 means the allele has  those negative residues which do not support the interpretation.
+The highlighted allele signature is used to highlight the similarity of the specific allele and the corresponding sub-motif cluster.
 
 <p align="center"><img src="example/output/interpretation/B0702.png" alt="" width="600"></p>

@@ -116,11 +116,12 @@ class Interpretation():
         current_ax = 0
 
         for side in ['N', 'C']:
-            try:
-                cluster = self.interp_dict['%s%s_label'%(hla, side)][allele]
-            except:
-                print("%s not in interpretation database"%allele)
+            cluster = self.interp_dict['%s%s_label'%(hla, side)][allele]
+            
+            if not cluster in self.interp_dict['%s%s_allele_signature'%(hla, side)].keys():
+                print("The cluster of %s is too small to interpretate"%allele)
                 return
+
             hyper_motif = self.interp_dict['%s%s_hyper_motif'%(hla, side)][cluster]
             hyper_motif = pd.DataFrame(hyper_motif, columns=list(self.aa_str))
             allele_signature = self.interp_dict['%s%s_allele_signature'%(hla, side)][cluster]
@@ -137,7 +138,9 @@ class Interpretation():
             else:
                 temp_df = motif_df.iloc[-4:].reset_index(drop=True)
             self._motif_plot(temp_df, side, ax[current_ax][0], title='%s, %s-side motif, num=%d'%(allele, side, len(seqs)))
-            self._mhcseq_plot(allele_df * allele_signature, ax[current_ax][1], title='%s, %s-side highlighted residues'%(allele, side))
+            allele_df[allele_df > 0] = 1
+            allele_signature[allele_signature < 0] = 0
+            self._mhcseq_plot(allele_df * allele_signature, ax[current_ax][1], title='%s, %s-side highlighted allele signature'%(allele, side))
             current_ax += 1
 
         fig.tight_layout()
