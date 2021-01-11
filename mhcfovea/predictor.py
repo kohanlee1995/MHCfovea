@@ -118,18 +118,18 @@ class Interpretation():
         for side in ['N', 'C']:
             cluster = self.interp_dict['%s%s_label'%(hla, side)][allele]
             
-            if not cluster in self.interp_dict['%s%s_allele_signature'%(hla, side)].keys():
-                print("The cluster of %s is too small to interpretate"%allele)
-                return
-
-            hyper_motif = self.interp_dict['%s%s_hyper_motif'%(hla, side)][cluster]
-            hyper_motif = pd.DataFrame(hyper_motif, columns=list(self.aa_str))
-            allele_signature = self.interp_dict['%s%s_allele_signature'%(hla, side)][cluster]
-            allele_signature = pd.DataFrame(allele_signature, columns=list(self.aa_str))
-
             # plot cluster
-            self._motif_plot(hyper_motif, side, ax[current_ax][0], title='%s-side hyper-motif'%side)
-            self._mhcseq_plot(allele_signature, ax[current_ax][1], title='%s-side allele signature'%side)
+            if cluster in self.interp_dict['%s%s_allele_signature'%(hla, side)].keys():
+                hyper_motif = self.interp_dict['%s%s_hyper_motif'%(hla, side)][cluster]
+                hyper_motif = pd.DataFrame(hyper_motif, columns=list(self.aa_str))
+                allele_signature = self.interp_dict['%s%s_allele_signature'%(hla, side)][cluster]
+                allele_signature = pd.DataFrame(allele_signature, columns=list(self.aa_str))
+                self._motif_plot(hyper_motif, side, ax[current_ax][0], title='%s-side hyper-motif'%side)
+                self._mhcseq_plot(allele_signature, ax[current_ax][1], title='%s-side allele signature'%side)
+
+            else:
+                print("The %s-side cluster of %s is too small to interpretate"%(side, allele))
+            
             current_ax += 1
 
             # plot allele itself
@@ -138,9 +138,12 @@ class Interpretation():
             else:
                 temp_df = motif_df.iloc[-4:].reset_index(drop=True)
             self._motif_plot(temp_df, side, ax[current_ax][0], title='%s, %s-side motif, num=%d'%(allele, side, len(seqs)))
-            allele_df[allele_df > 0] = 1
-            allele_signature[allele_signature < 0] = 0
-            self._mhcseq_plot(allele_df * allele_signature, ax[current_ax][1], title='%s, %s-side highlighted allele signature'%(allele, side))
+
+            if cluster in self.interp_dict['%s%s_allele_signature'%(hla, side)].keys():
+                allele_df[allele_df > 0] = 1
+                allele_signature[allele_signature < 0] = 0
+                self._mhcseq_plot(allele_df * allele_signature, ax[current_ax][1], title='%s, %s-side highlighted allele signature'%(allele, side))
+            
             current_ax += 1
 
         fig.tight_layout()
@@ -151,7 +154,7 @@ class Interpretation():
 
     def _get_motif_seqlogo(self, seqs, sub_motif_len):
         seqs = seqs.apply(lambda x: x[:sub_motif_len] + x[-sub_motif_len:])
-        seqlogo_df = lm.alignment_to_matrix(sequences=seqs, to_type='information', characters_to_ignore='XU.')
+        seqlogo_df = lm.alignment_to_matrix(sequences=seqs, to_type='information', characters_to_ignore='XU.', pseudocount=0)
         df = pd.DataFrame(columns=list(self.aa_str))
         df = pd.concat([df, seqlogo_df], axis=0)
         df = df[list(self.aa_str)]
@@ -352,6 +355,8 @@ def main(args=None):
             idx = np.where(df[allele] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
                 seqlogo_dict[allele] = Interp(allele, df.iloc[idx]['sequence']).values
+            else:
+                print('The number of positive peptides of %s is less than 10, so no interpretation figure is plotted.')
 
             # metrics
             if get_metrics:
@@ -367,6 +372,8 @@ def main(args=None):
             idx = np.where(sub_df['score'] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
                 seqlogo_dict[allele] = Interp(allele, sub_df.iloc[idx]['sequence']).values
+            else:
+                print('The number of positive peptides of %s is less than 10, so no interpretation figure is plotted.')
 
         # metrics
         if get_metrics:
