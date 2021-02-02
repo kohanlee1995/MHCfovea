@@ -1,19 +1,23 @@
 # MHCfovea
 
-MHCfovea is a pan-allele MHC-I-peptide binding predictor which takes MHC-I alleles and peptide sequences to predict the binding probability within 0 and 1. Our predictor is a convolution-based model trained on both binding assay data and ligand elution data from IEDB database. For MHC-I molecules, we use the peptide-binding cleft which is a 182-amino-acid sequence composed of α-1 and α-2 regions as the encode of MHC-I alleles. As for peptides, any sequence within 8 to 15 amino acids is available.
+MHCfovea, a deep learning-based framework, provides predictions of MHC-I-peptide binding and connects MHC-I alleles with binding motifs.
 
-Model Architecture:
+## Overview
 
-<p align="center"><img src="figures/model_architecture.png" alt="" width="600"></p>
+First, the predictor, an ensemble model based on convolutional neural networks, was trained on 150 observed alleles, and 42 important positions were highlighted from MHC-I sequence (182 a.a.) using ScoreCAM. Second, we made predictions on 150 observed alleles and 12,858 unobserved alleles with a single peptide dataset (number: 254,742), and extracted positive predictions (score > 0.9) to generate binding motifs. Then, after clustering the N-terminal and C-terminal sub-motifs, we build hyper-motifs and allele signatures based on 42 important positions to reveal the relation between binding motifs and MHC-I sequences.
 
+<p align="center"><img src="figures/overview.png" alt="" width="600"></p>
 
-In addition to binding prediction, MHCfovea provides an interpretation of the relation between MHC-I sequences and epitop-binding motifs. We apply ScoreCAM on our model to select important positions of MHC-I sequences, and expand unobserved alleles by prediction to build clusters of MHC-I-peptide binding. The cluster contains a hyper-motif, representing the preference of epitope binding, and an allele signature, representing the pattern of MHC-I sequences. 
+## Application
 
-For each queried allele, the epitope-binding motif and highlighted MHC-I residues are reported. The epitope-binding motif is calculated from the input file, and the highlighted residues are consensus residues of the queried allele and allele signature.
+MHCfovea takes MHC-I alleles (all alleles in the IPD-IMGT/HLA database (version 3.41.0) are available) and peptide sequences as inputs to predict the binding probability. For each queried allele, MHCfovea provides the cluster information and allele information of N- and C-terminal clusters respectively.
 
-Interpretation clusters of HLA-B:
-
-<p align="center"><img src="figures/interpretation_B.png" alt="" width="600"></p>
+- cluster information
+  - hyper-motif: the pattern of binding peptides in a specific cluster
+  - allele signature: the pattern of MHC-I alleles in a specific cluster
+- allele information
+  - sub-motif: the binding sub-motif of the queried allele
+  - highlighted allele signature: the consensus residues of the allele signature and the queried allele
 
 If you find MHCfovea useful in your research please cite:
 
@@ -32,9 +36,7 @@ pip3 install -r requirements.txt
 
 ## Usage
 ```
-usage: predictor [-h] [--alleles ALLELES] [--motif_threshold MOTIF_THRESHOLD]
-                 [--get_metrics]
-                 input output_dir
+usage: predictor [-h] [--alleles ALLELES] [--get_metrics] input output_dir
 
     MHCfovea, an MHCI-peptide binding predictor. In this prediction process, GPU is recommended.
 
@@ -49,20 +51,18 @@ usage: predictor [-h] [--alleles ALLELES] [--motif_threshold MOTIF_THRESHOLD]
 
     Output directory contains:
     1. prediction.csv: with new column "score" for specific mode or [allele] for general mode
-    2. interpretation: a directory contains interpretation figures of each allele with more than 10 positive predictions
+    2. interpretation: a directory contains interpretation figures of each allele
     3. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
 
 
 positional arguments:
-  input                 The input file
-  output_dir            The output directory
+  input              The input file
+  output_dir         The output directory
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --alleles ALLELES     alleles for general mode
-  --motif_threshold MOTIF_THRESHOLD
-                        prediction threshold for epitope-binding motifs, default=0.9
-  --get_metrics         calculate the metrics between prediction and benchmark
+  -h, --help         show this help message and exit
+  --alleles ALLELES  alleles for general mode
+  --get_metrics      calculate the metrics between prediction and benchmark
 ```
 
 
@@ -123,6 +123,5 @@ python3 mhcfovea/predictor.py example/input.csv example/output
 | APHPSSWETL | B*07:02 | 0.989 |
 
 #### interpretation figure
-The highlighted allele signature is used to highlight the similarity of the specific allele and the corresponding sub-motif cluster.
 
 <p align="center"><img src="example/output/interpretation/B0702.png" alt="" width="600"></p>

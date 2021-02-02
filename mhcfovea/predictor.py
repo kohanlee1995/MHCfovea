@@ -92,85 +92,76 @@ class Predictor():
 
 
 class Interpretation():
-    def __init__(self, interpretation_file, mhc_dict, output_dir):
+    def __init__(self, interpretation_db, output_dir):
         self.aa_str = 'ACDEFGHIKLMNPQRSTVWY'
         self.sub_motif_len = 4
-        self.dpi = 600
-        self.fontsize = 10
+        self.dpi = 200
+        self.fontsize = 8
         
-        self.interp_dict = pickle.load(open(interpretation_file, 'rb'))
+        self.interp_dict = interpretation_db
         self.positions = self.interp_dict['important_positions']
-        self.mhc_dict = mhc_dict
+        self.mhc_dict = self.interp_dict['seq']
+        self.motif_dict = self.interp_dict['motif']
         self.output_dir = output_dir
         if not os.path.isdir(output_dir):
             os.mkdir(output_dir)
 
 
-    def __call__(self, allele, seqs):
+    def __call__(self, allele):
         hla = allele.split('*')[0]
-        motif_df = self._get_motif_seqlogo(seqs, self.sub_motif_len)
+        motif_df = pd.DataFrame(self.motif_dict[allele], columns=list(self.aa_str))
         allele_df = self._get_allele_seqlogo(allele)
 
-        fig, ax = plt.subplots(4, 2, figsize=(8, 10), dpi=self.dpi,
-                                 gridspec_kw={'width_ratios': [1, 3]})
-        current_ax = 0
+        fig, ax = plt.subplots(4, 2, figsize=(5, 8), dpi=self.dpi, gridspec_kw={'width_ratios': [1, 4]})
+        ax_x = 0
 
         for side in ['N', 'C']:
-            cluster = self.interp_dict['%s%s_label'%(hla, side)][allele]
-            
-            # plot cluster
-            if cluster in self.interp_dict['%s%s_allele_signature'%(hla, side)].keys():
-                hyper_motif = self.interp_dict['%s%s_hyper_motif'%(hla, side)][cluster]
-                hyper_motif = pd.DataFrame(hyper_motif, columns=list(self.aa_str))
-                allele_signature = self.interp_dict['%s%s_allele_signature'%(hla, side)][cluster]
-                allele_signature = pd.DataFrame(allele_signature, columns=list(self.aa_str))
-                self._motif_plot(hyper_motif, side, ax[current_ax][0], title='%s-side hyper-motif'%side)
-                self._mhcseq_plot(allele_signature, ax[current_ax][1], title='%s-side allele signature'%side)
+            # cluster
+            cluster = self.interp_dict['cluster']['%s_%s'%(hla, side)][allele]
 
-            else:
-                print("The %s-side cluster of %s is too small to interpretate"%(side, allele))
-            
-            current_ax += 1
-
-            # plot allele itself
+            # sub motif
             if side == 'N':
-                temp_df = motif_df.iloc[:4]
+                sub_motif_df = motif_df.iloc[:4]
             else:
-                temp_df = motif_df.iloc[-4:].reset_index(drop=True)
-            self._motif_plot(temp_df, side, ax[current_ax][0], title='%s, %s-side motif, num=%d'%(allele, side, len(seqs)))
+                sub_motif_df = motif_df.iloc[-4:].reset_index(drop=True)
 
-            if cluster in self.interp_dict['%s%s_allele_signature'%(hla, side)].keys():
-                allele_df[allele_df > 0] = 1
-                allele_signature[allele_signature < 0] = 0
-                self._mhcseq_plot(allele_df * allele_signature, ax[current_ax][1], title='%s, %s-side highlighted allele signature'%(allele, side))
+            # sub-motif plot
+            self._motif_plot(sub_motif_df, side, ax[ax_x+1][0])
+
+            # check cluster
+            if cluster not in self.interp_dict['hyper_motif']['%s_%s'%(hla, side)].keys():
+                _ = ax[ax_x+1][1].set_title('%s-terminus: allele information'%side, loc='left')
+                _ = ax[ax_x][1].set_title('%s-terminus: not well classified'%side, loc='left')
+                print('%s-terminal of %s is not well classified'%(side, allele))
+                continue
+
+            # hyper-motif plot
+            hyper_motif = self.interp_dict['hyper_motif']['%s_%s'%(hla, side)][cluster]
+            hyper_motif = pd.DataFrame(hyper_motif, columns=list(self.aa_str))
+            self._motif_plot(hyper_motif, side, ax[ax_x][0])
+
+            # allele signature plot
+            allele_signature = self.interp_dict['allele_signature']['%s_%s'%(hla, side)][cluster]
+            allele_signature = pd.DataFrame(allele_signature, columns=list(self.aa_str))
+            self._mhcseq_plot(allele_signature, ax[ax_x][1], title='%s-terminus: cluster information'%side)
             
-            current_ax += 1
+            # highlighted allele signature plot
+            allele_df[allele_df > 0] = 1
+            allele_signature[allele_signature < 0] = 0
+            self._mhcseq_plot(allele_df * allele_signature, ax[ax_x+1][1], title='%s-terminus: allele information'%side)
+            
+            ax_x += 2
 
         fig.tight_layout()
         fig.savefig('%s/%s%s%s.png'%(self.output_dir, hla, allele[2:4], allele[5:]))
-
-        return motif_df
-
-
-    def _get_motif_seqlogo(self, seqs, sub_motif_len):
-        seqs = seqs.apply(lambda x: x[:sub_motif_len] + x[-sub_motif_len:])
-        seqlogo_df = lm.alignment_to_matrix(sequences=seqs, to_type='information', characters_to_ignore='XU.', pseudocount=0)
-        df = pd.DataFrame(columns=list(self.aa_str))
-        df = pd.concat([df, seqlogo_df], axis=0)
-        df = df[list(self.aa_str)]
-        df = df.fillna(0.0)
-        return df
 
 
     def _get_allele_seqlogo(self, allele):
         seq = self.mhc_dict[allele]
         seq = ''.join([seq[i] for i in self.positions])
-        seqlogo_df = lm.alignment_to_matrix(sequences=[seq], to_type='probability', characters_to_ignore=".XU", pseudocount=0)
+        seqlogo_df = lm.alignment_to_matrix(sequences=[seq], to_type='counts')
         df = pd.DataFrame(columns=list(self.aa_str))
-        df = pd.concat([df, seqlogo_df], axis=0)
-        df = df[list(self.aa_str)]
-        df = df.fillna(0.0)
-        return df
+        return pd.concat([df, seqlogo_df], axis=0)[list(self.aa_str)].fillna(0)
 
 
     def _motif_plot(self, seqlogo_df, side, ax, ylim=4, title=None, turn_off_label=False):
@@ -184,13 +175,14 @@ class Interpretation():
         _ = ax.set_ylim(0,ylim)
         _ = ax.set_title(title)
         for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
-            item.set_fontsize(self.fontsize)
+            item.set_fontsize(self.fontsize-2)
+
+        _ = ax.set_yticks([])
+        _ = ax.set_yticklabels([])
             
         if turn_off_label:
             _ = ax.set_xticks([])
-            _ = ax.set_yticks([])
             _ = ax.set_xticklabels([])
-            _ = ax.set_yticklabels([])
             _ = ax.set_title(None)
 
 
@@ -199,17 +191,16 @@ class Interpretation():
         _ = ax.set_ylim(-ylim, ylim)
         _ = ax.set_xticks(range(len(self.positions)))
         _ = ax.set_xticklabels([i+1 for i in self.positions], rotation=90)
-        _ = ax.set_title(title)
+        _ = ax.set_title(title, loc='left')
         for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()):
-            item.set_fontsize(self.fontsize)
-        for item in ax.get_xticklabels():
-            item.set_fontsize(self.fontsize-3)
+            item.set_fontsize(self.fontsize-2)
+
+        _ = ax.set_yticks([])
+        _ = ax.set_yticklabels([])
             
         if turn_off_label:
             _ = ax.set_xticks([])
-            _ = ax.set_yticks([])
             _ = ax.set_xticklabels([])
-            _ = ax.set_yticklabels([])
             _ = ax.set_title(None)
 
 
@@ -228,7 +219,7 @@ def ArgumentParser():
     
     Output directory contains:
     1. prediction.csv: with new column "score" for specific mode or [allele] for general mode
-    2. interpretation: a directory contains interpretation figures of each allele with more than 10 positive predictions
+    2. interpretation: a directory contains interpretation figures of each allele
     3. metrics.json: all and allele-specific metrics (AUC, AUC0.1, AP, PPV); column "bind" as benchmark is required
     '''
     
@@ -238,7 +229,6 @@ def ArgumentParser():
     parser.add_argument('input', help='The input file')
     parser.add_argument('output_dir', help='The output directory')
     parser.add_argument('--alleles', required=False, default=None, help='alleles for general mode')
-    parser.add_argument('--motif_threshold', required=False, default=0.9, help='prediction threshold for epitope-binding motifs, default=0.9')
     parser.add_argument('--get_metrics', required=False, default=False, action='store_true', help='calculate the metrics between prediction and benchmark')
 
     return parser
@@ -267,19 +257,17 @@ def main(args=None):
         os.mkdir(output_dir)
 
     # data
-    mhc_file = '../data/MHCI_res182_seq.json'
-    mhc_dict = json.load(open(mhc_file, 'r'))
+    db_file = '../data/interpretation.pkl'
+    db = pickle.load(open(db_file, 'rb'))
+    mhc_dict = db['seq']
     alleles = args.alleles
     encoding_method = 'onehot'
-    interpretation_file = '../data/interpretation.pkl'
-
+    
     # model
     model_file = 'model.py'
     model_state_dir = 'model_state'
 
     # others
-    seqlogo_threshold = args.motif_threshold
-    positive_threshold = 10
     get_metrics = args.get_metrics
 
 
@@ -339,7 +327,7 @@ def main(args=None):
     Pred = Predictor(mhc_encode_dict, model_file, model_state_files, encoding_method)
 
     # interpretation
-    Interp = Interpretation(interpretation_file, mhc_dict, '%s/interpretation'%output_dir)
+    Interp = Interpretation(db, '%s/interpretation'%output_dir)
 
     # seqlogo dict
     seqlogo_dict = dict()
@@ -350,14 +338,10 @@ def main(args=None):
         for allele in tqdm(alleles, desc='alleles', leave=False, position=0):
             pred_df = Pred(df, dataset, allele=allele)
             df[allele] = pred_df[list(Pred.models.keys())].mean(axis=1).round(3)
-
-            # seqlogo
-            idx = np.where(df[allele] > seqlogo_threshold)[0]
-            if len(idx) >= positive_threshold:
-                seqlogo_dict[allele] = Interp(allele, df.iloc[idx]['sequence']).values
-            else:
-                print('The number of positive peptides of %s is less than 10, so no interpretation figure is plotted.')
-
+            
+            # interpretation
+            Interp(allele)
+            
             # metrics
             if get_metrics:
                 metrics_dict[allele] = CalculateMetrics(df['bind'], df[allele])
@@ -366,14 +350,10 @@ def main(args=None):
     else:
         pred_df = Pred(df, dataset)
         df['score'] = pred_df[list(Pred.models.keys())].mean(axis=1).round(3)
-        
-        # seqlogo
+
+        # interpretation
         for allele, sub_df in df.groupby('mhc'):
-            idx = np.where(sub_df['score'] > seqlogo_threshold)[0]
-            if len(idx) >= positive_threshold:
-                seqlogo_dict[allele] = Interp(allele, sub_df.iloc[idx]['sequence']).values
-            else:
-                print('The number of positive peptides of %s is less than 10, so no interpretation figure is plotted.')
+            Interp(allele)
 
         # metrics
         if get_metrics:
