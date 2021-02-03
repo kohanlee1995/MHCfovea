@@ -76,51 +76,21 @@ python3 mhcfovea/predictor.py example/input.csv example/output
 
 | sequence | mhc |
 |---|---|
-| NAPWAVTSL | B*07:02 |
-| VNLPINGNGKQ | B*07:02 |
-| RVAEFHTEL | B*07:02 |
-| AAAGPGAAL | B*07:02 |
-| APAAIPAL | B*07:02 |
-| APAAYPREVAL | B*07:02 |
-| APAGGAGAL | B*07:02 |
-| APAGSIISL | B*07:02 |
-| APAPGAPLL | B*07:02 |
-| APAPGAPLLPL | B*07:02 |
-| APAPSRGSVQV | B*07:02 |
-| APAPSRGSVQVAL | B*07:02 |
-| APFGLKPRSV | B*07:02 |
-| APFLRIAF | B*07:02 |
-| APGDYGRQAL | B*07:02 |
-| APGEPGSAF | B*07:02 |
-| APGGGPGTL | B*07:02 |
-| APGPGLLL | B*07:02 |
-| APHDYGLIL | B*07:02 |
-| APHPSSWETL | B*07:02 |
+| PVPTYGLSV | B*07:02 |
+| APGARNTAAVL | B*07:02 |
+| SPAPPTCHEL | B*07:02 |
+| PGLAVKELK | B*07:02 |
+| GPMVAGGLL | B*07:02 |
 
 #### output file
 
 | sequence | mhc | score |
 |---|---|---|
-| NAPWAVTSL | B*07:02 | 0.919 |
-| VNLPINGNGKQ | B*07:02 | 0.968 |
-| RVAEFHTEL | B*07:02 | 0.94 |
-| AAAGPGAAL | B*07:02 | 0.959 |
-| APAAIPAL | B*07:02 | 0.979 |
-| APAAYPREVAL | B*07:02 | 0.997 |
-| APAGGAGAL | B*07:02 | 0.998 |
-| APAGSIISL | B*07:02 | 0.997 |
-| APAPGAPLL | B*07:02 | 0.999 |
-| APAPGAPLLPL | B*07:02 | 0.999 |
-| APAPSRGSVQV | B*07:02 | 0.994 |
-| APAPSRGSVQVAL | B*07:02 | 0.992 |
-| APFGLKPRSV | B*07:02 | 0.961 |
-| APFLRIAF | B*07:02 | 0.913 |
-| APGDYGRQAL | B*07:02 | 0.995 |
-| APGEPGSAF | B*07:02 | 0.986 |
-| APGGGPGTL | B*07:02 | 0.983 |
-| APGPGLLL | B*07:02 | 0.943 |
-| APHDYGLIL | B*07:02 | 0.973 |
-| APHPSSWETL | B*07:02 | 0.989 |
+| PVPTYGLSV | B*07:02 | 0.606 |
+| APGARNTAAVL | B*07:02 | 0.987 |
+| SPAPPTCHEL | B*07:02 | 0.997 |
+| PGLAVKELK | B*07:02 | 0.569 |
+| GPMVAGGLL | B*07:02 | 0.966 |
 
 #### interpretation figure
 

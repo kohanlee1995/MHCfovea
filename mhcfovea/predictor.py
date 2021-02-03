@@ -112,8 +112,8 @@ class Interpretation():
         motif_df = pd.DataFrame(self.motif_dict[allele], columns=list(self.aa_str))
         allele_df = self._get_allele_seqlogo(allele)
 
-        fig, ax = plt.subplots(4, 2, figsize=(5, 8), dpi=self.dpi, gridspec_kw={'width_ratios': [1, 4]})
-        ax_x = 0
+        fig, ax = plt.subplots(2, 4, figsize=(10, 4), dpi=self.dpi, gridspec_kw={'width_ratios': [1, 4, 1, 4]})
+        ax_y = 0
 
         for side in ['N', 'C']:
             # cluster
@@ -126,31 +126,31 @@ class Interpretation():
                 sub_motif_df = motif_df.iloc[-4:].reset_index(drop=True)
 
             # sub-motif plot
-            self._motif_plot(sub_motif_df, side, ax[ax_x+1][0])
+            self._motif_plot(sub_motif_df, side, ax[1][ax_y])
 
             # check cluster
             if cluster not in self.interp_dict['hyper_motif']['%s_%s'%(hla, side)].keys():
-                _ = ax[ax_x+1][1].set_title('%s-terminus: allele information'%side, loc='left')
-                _ = ax[ax_x][1].set_title('%s-terminus: not well classified'%side, loc='left')
+                _ = ax[0][ax_y+1].set_title('%s-terminus: not well classified'%side, loc='left')
+                _ = ax[1][ax_y+1].set_title('%s-terminus: allele information'%side, loc='left')
                 print('%s-terminal of %s is not well classified'%(side, allele))
                 continue
 
             # hyper-motif plot
             hyper_motif = self.interp_dict['hyper_motif']['%s_%s'%(hla, side)][cluster]
             hyper_motif = pd.DataFrame(hyper_motif, columns=list(self.aa_str))
-            self._motif_plot(hyper_motif, side, ax[ax_x][0])
+            self._motif_plot(hyper_motif, side, ax[0][ax_y])
 
             # allele signature plot
             allele_signature = self.interp_dict['allele_signature']['%s_%s'%(hla, side)][cluster]
             allele_signature = pd.DataFrame(allele_signature, columns=list(self.aa_str))
-            self._mhcseq_plot(allele_signature, ax[ax_x][1], title='%s-terminus: cluster information'%side)
+            self._mhcseq_plot(allele_signature, ax[0][ax_y+1], title='%s-terminus: cluster information'%side)
             
             # highlighted allele signature plot
             allele_df[allele_df > 0] = 1
             allele_signature[allele_signature < 0] = 0
-            self._mhcseq_plot(allele_df * allele_signature, ax[ax_x+1][1], title='%s-terminus: allele information'%side)
+            self._mhcseq_plot(allele_df * allele_signature, ax[1][ax_y+1], title='%s-terminus: allele information'%side)
             
-            ax_x += 2
+            ax_y += 2
 
         fig.tight_layout()
         fig.savefig('%s/%s%s%s.png'%(self.output_dir, hla, allele[2:4], allele[5:]))
