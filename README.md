@@ -94,4 +94,4 @@ python3 mhcfovea/predictor.py example/input.csv example/output
 
 #### interpretation figure
 
-<p align="center"><img src="example/output/interpretation/B0702.png" alt="" width="600"></p>
+<p align="center"><img src="example/output/interpretation/B0702.png" alt="" width="800"></p>
