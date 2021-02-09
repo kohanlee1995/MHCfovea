@@ -1,10 +1,10 @@
 # MHCfovea
 
-MHCfovea, a deep learning-based framework, provides predictions of MHC-I-peptide binding and connects MHC-I alleles with binding motifs.
+MHCfovea integrates a supervised prediction module and an unsupervised summarization module to connect important residues to binding motifs.
 
 ## Overview
 
-First, the predictor, an ensemble model based on convolutional neural networks, was trained on 150 observed alleles, and 42 important positions were highlighted from MHC-I sequence (182 a.a.) using ScoreCAM. Second, we made predictions on 150 observed alleles and 12,858 unobserved alleles with a single peptide dataset (number: 254,742), and extracted positive predictions (score > 0.9) to generate binding motifs. Then, after clustering the N-terminal and C-terminal sub-motifs, we build hyper-motifs and allele signatures based on 42 important positions to reveal the relation between binding motifs and MHC-I sequences.
+First, the predictor, an ensemble model of multiple convolutional neural networks (CNN model), was trained on 150 observed alleles. In the predictor, 42 important positions were highlighted from MHC-I sequence (182 a.a.) using ScoreCAM. Next, we made predictions on 150 observed alleles and 12,858 unobserved alleles against a peptide dataset (number: 254,742), and extracted positive predictions (score > 0.9) to generate the binding motif of an allele. Then, after clustering the N-terminal and C-terminal sub-motifs, we build hyper-motifs and the corresponding allele signatures based on 42 important positions to reveal the relation between binding motifs and MHC-I sequences.
 
 <p align="center"><img src="figures/overview.png" alt="" width="800"></p>
 
