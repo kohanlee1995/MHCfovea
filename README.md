@@ -101,3 +101,18 @@ python3 mhcfovea/predictor.py example/input.csv example/output
 #### interpretation figure
 
 <p align="center"><img src="example/output/interpretation/B0702.png" alt="" width="800"></p>
+
+
+## Development
+
+The folder of development contains all source codes for the development of MHCfovea. The following is the description of these files.
+- build_dataset.py: for building training, validation, and benchmark dataset
+- util.py: utility functions for data analysis
+- trainer.py: for the training process
+- BA.py: utility functions for training process
+- predictor.py: for the prediction process
+- cam.py: functions for CAM algorithm
+- cam_run.py: for the CAM process
+- run_pan_allele.py: for the prediction on all HLA alleles
+- CAMInterp.py: utility functions for the interpretation of CAM results
+- MHCInterp.py: utility functions for the summarization
