@@ -25,7 +25,7 @@ class MHCInterp():
         self.mhc_motif_dict = mhc_motif_dict
         self.submotif_len = submotif_len
         self.position_dict = position_dict
-        self.select_num = 50
+        self.group_select_num = 50
         self.output_dir = output_dir
         
         pos = self.position_dict['selected']
@@ -81,12 +81,12 @@ class MHCInterp():
         # select alleles
         motif_df['select_label'] = -1
         for label, sub_label_df in motif_df.groupby('label'):
-            if sub_label_df.shape[0] < self.select_num:
+            if sub_label_df.shape[0] < self.group_select_num:
                 continue
             temp_alleles = list()
             for group, sub_group_df in sub_label_df.groupby('group'):
-                if sub_group_df.shape[0] >= self.select_num:
-                    temp_alleles += list(sub_group_df.sample(self.select_num, replace=False, random_state=0).index)
+                if sub_group_df.shape[0] >= self.group_select_num:
+                    temp_alleles += list(sub_group_df.sample(self.group_select_num, replace=False, random_state=0).index)
                 else:
                     temp_alleles += list(sub_group_df.index)
             motif_df.loc[temp_alleles, 'select_label'] = label
@@ -125,15 +125,15 @@ class MHCInterp():
         for key, df in df_dict.items():
             print(key)
             for idx, row in df.iterrows():
-                groups = row[row >= self.select_num/2].index
+                groups = row[row >= self.group_select_num/2].index
                 groups = ['%s%s'%(j[0], j[2:]) for j in groups]
                 groups_str = ' '.join(groups)
                 print(idx, groups_str)
         
         # plot
         fig, ax = plt.subplots(2,1, figsize=(10, 5), dpi=self.dpi)
-        self._group_count_plot(Nside_group_df.loc[Nside_group_df.sum(axis=1) > self.select_num], ax[0], xticklabel=False)
-        self._group_count_plot(Cside_group_df.loc[Cside_group_df.sum(axis=1) > self.select_num], ax[1])
+        self._group_count_plot(Nside_group_df.loc[Nside_group_df.sum(axis=1) > self.group_select_num], ax[0], xticklabel=False)
+        self._group_count_plot(Cside_group_df.loc[Cside_group_df.sum(axis=1) > self.group_select_num], ax[1])
         fig.tight_layout()
         fig.savefig('%s/%s_GroupCount.png'%(self.output_dir, hla))
         
@@ -143,43 +143,111 @@ class MHCInterp():
         
         return Nside_group_df, Cside_group_df
         
-        
-    def Analysis(self, hla, Nside_group=None, Cside_group=None, side='both',
-                 highlight_pos_dict=dict(), turn_off_label=False):
+    
+    def Combining(self, hla, interp_dict):
+        # build label df
+        label_df = pd.DataFrame.from_dict(interp_dict['cluster']['%s_N'%hla], orient='index', columns=['N_terminus'])
+        label_df['C_terminus'] = pd.DataFrame.from_dict(interp_dict['cluster']['%s_C'%hla], orient='index', columns=['C_terminus'])['C_terminus']
+        label_df['group'] = label_df.index.to_series().apply(lambda x: x.split(':')[0])
+
+        # build empty df
+        N_class = sorted(label_df['N_terminus'].unique())
+        C_class = sorted(label_df['C_terminus'].unique())
+
+        index_tuple = list()
+        for n in N_class:
+            for c in C_class:
+                index_tuple.append((n, c))
+
+        index = pd.MultiIndex.from_tuples(index_tuple, names=["N_terminus", "C_terminus"])
+        column = sorted(label_df['group'].unique())
+        comb_df = pd.DataFrame(0, index=index, columns=column)
+
+        # assign value
+        for (n,c), row in comb_df.iterrows():
+            sub_df = label_df[(label_df['N_terminus']==n) & (label_df['C_terminus']==c)]
+            val_df = sub_df['group'].value_counts()
+            comb_df.loc[n, c] = val_df
+        comb_df.fillna(0, inplace=True)
+
+        # threshold
+        ## group threshold: group_num >= 0.5*group_select_num  or group_ratio > group_min_ratio
+        group_min_ratio = 0.1
+        group_threshold = comb_df.sum(axis=0) * group_min_ratio
+        group_threshold[group_threshold > (0.5*self.group_select_num - 1)] = (0.5*self.group_select_num - 1)
+
+        ## combination threshold: comb_num > comb_min and select maximal group
+        comb_min = 10
+        comb_threshold = comb_df.max(axis=1)
+        select_comb_df = comb_df.gt(group_threshold, axis=1) | comb_df.ge(comb_threshold, axis=0)
+        comb_min_index = (comb_df.sum(axis=1) > comb_min)
+
+        # assign selected groups to new column 'groups'
+        for idx, row in select_comb_df.iterrows():
+            if not comb_min_index[idx]:
+                select_comb_df.loc[idx, 'groups'] = ""
+                continue
+            groups = row.index[row].to_list()
+            select_comb_df.loc[idx, 'groups'] = " ".join(groups).replace("*", "")
+            
+        return select_comb_df
+
+
+    # N_targets = {[cluster]: [color], ...}
+    def Demo(self, hla, interp_dict, N_targets, C_targets):
+        # selected positions
+        positions = self.position_dict['selected']
+
+        # build label df
+        label_df = pd.DataFrame.from_dict(interp_dict['cluster']['%s_N'%hla], orient='index', columns=['N_terminus'])
+        label_df['C_terminus'] = pd.DataFrame.from_dict(interp_dict['cluster']['%s_C'%hla], orient='index', columns=['C_terminus'])['C_terminus']
+        label_df['group'] = label_df.index.to_series().apply(lambda x: x.split(':')[0])
+
+        # demo directory
+        if not os.path.isdir('%s/Demo'%self.output_dir):
+            os.mkdir('%s/Demo'%self.output_dir)
+
+        # load data and build background mhc seqlogo
         Nside_df = pd.read_csv('%s/%s_NsideDF.csv'%(self.output_dir, hla), index_col=0)
         Cside_df = pd.read_csv('%s/%s_CsideDF.csv'%(self.output_dir, hla), index_col=0)
-        figfile = '%s/%s_'%(self.output_dir, hla)
-        
-        # alleles
-        if Nside_group != None:
-            Nside_alleles = Nside_df[Nside_df['select_label']==Nside_group].index
-            figfile += 'N%d'%Nside_group
-        else:
-            Nside_alleles = Nside_df.index
-        
-        if Cside_group != None:
-            Cside_alleles = Cside_df[Cside_df['select_label']==Cside_group].index
-            figfile += 'C%d'%Cside_group
-        else:
-            Cside_alleles = Cside_df.index
-        
-        alleles = list(set(Nside_alleles) & set(Cside_alleles))
-        print("Allele Number: ", len(alleles))
-        
-        # plot
-        if side == 'both':
-            fig, ax = plt.subplots(1, 2, figsize=(7.5, 1.5), dpi=self.dpi, gridspec_kw={'width_ratios': [2, 3]})
-        else:
-            fig, ax = plt.subplots(1, 2, figsize=(6, 1.5), dpi=self.dpi, gridspec_kw={'width_ratios': [1, 3]})
-        hla_seqlogo_df = (self._mhc_seqlogo(Nside_df.index, self.position_dict['selected']) + \
-                         self._mhc_seqlogo(Cside_df.index, self.position_dict['selected'])) / 2
-        
-        _ = self._motif_plot(alleles, side, ax[0], turn_off_label=turn_off_label)
-        _ = self._mhcseq_plot(alleles, self.position_dict['selected'], ax[1], diff_df=hla_seqlogo_df,
-                              highlight_pos_dict=highlight_pos_dict, turn_off_label=turn_off_label)
+        hla_seqlogo_df = (self._mhc_seqlogo(Nside_df[Nside_df['select_label']!=-1].index, positions) + \
+                          self._mhc_seqlogo(Cside_df[Cside_df['select_label']!=-1].index, positions)) / 2
 
-        fig.tight_layout()
-        fig.savefig(figfile)
+        # middle position for color boxes
+        middle_pos = 76
+        n_pos = [i for i in positions if i <= middle_pos]
+        c_pos = [i for i in positions if i > middle_pos ]
+
+        # side info
+        side_info = {'N': [Nside_df, n_pos, N_targets], 'C': [Cside_df, c_pos, C_targets]}
+
+        # cluster demo
+        for side, info in side_info.items():
+            side_df, side_pos, side_targets = info
+            for cluster, color in side_targets.items():
+                fig, ax = plt.subplots(1, 2, figsize=(6, 1.5), dpi=self.dpi, gridspec_kw={'width_ratios': [1, 3]})
+                _ = self._motif_plot(side_df[side_df['label']==cluster].index, side, ax[0], turn_off_label=True)
+                _ = self._mhcseq_plot(side_df[side_df['select_label']==cluster].index, positions, ax[1],
+                                      highlight_pos_dict={color: side_pos}, turn_off_label=True,
+                                      diff_df=self._mhc_seqlogo(side_df[side_df['select_label']!=-1].index, positions))
+                fig.tight_layout()
+                fig.savefig('%s/Demo/ClusterDemo_%s%s%d.png'%(self.output_dir, hla, side, cluster))
+
+        # combination demo
+        for n_cluster, n_color in N_targets.items():
+            for c_cluster, c_color in C_targets.items():
+                highlight_pos_dict = {n_color: n_pos, c_color: c_pos}
+                alleles = label_df[(label_df['N_terminus']==n_cluster) & (label_df['C_terminus']==c_cluster)].index
+                print('N=%d, C=%d, num=%d'%(n_cluster, c_cluster, len(alleles)))
+
+                # plot
+                fig, ax = plt.subplots(1, 2, figsize=(7.5, 1.5), dpi=self.dpi, gridspec_kw={'width_ratios': [2, 3]})
+                _ = self._motif_plot(alleles, 'both', ax[0], turn_off_label=True)
+                _ = self._mhcseq_plot(alleles, positions, ax[1], diff_df=hla_seqlogo_df,
+                                      highlight_pos_dict=highlight_pos_dict, turn_off_label=True)
+
+                fig.tight_layout()
+                fig.savefig('%s/Demo/CombineDemo_%sN%dC%d.png'%(self.output_dir, hla, n_cluster, c_cluster))
 
 
     """"""""""""""""""""""""""""""""""""""
