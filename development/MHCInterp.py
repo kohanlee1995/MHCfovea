@@ -301,10 +301,12 @@ class MHCInterp():
 
     def _submotif_clustering(self, motif_df, method, kwargs):
         # remove label column
-        columns = list(motif_df.columns)
-        for col in columns:
+        cols = list(df.columns)
+        new_cols = list()
+        for col in cols:
             if ('label' in col) or ('group' in col):
-                columns.remove(col)
+                continue
+            new_cols.append(col)
 
         # method
         if method == 'DBSCAN':
@@ -323,7 +325,7 @@ class MHCInterp():
             assert ValueError
 
         # clustering
-        arr = motif_df[columns].to_numpy()
+        arr = motif_df[new_cols].to_numpy()
         cluster.fit(arr)
 
         # add label
