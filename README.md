@@ -28,10 +28,6 @@ If you find MHCfovea useful in your research please cite:
 </div>
 
 
-
-Ko-Han Lee, Yu-Chuan Chang, Ting-Fu Chen, Hsueh-Fen Juan, Huai-Kuang Tsai, Chien-Yu Chen
-bioRxiv 2021.04.18.440359; doi: https://doi.org/10.1101/2021.04.18.440359
-
 ## Installation
 1. Python3 is required
 2. Download/Clone MHCfovea
