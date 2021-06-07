@@ -198,6 +198,12 @@ def CalculateAlleleMetrics(mhc_list, y, pred):
     return result_dict
 
 
+def AssignRank(rank_df, allele, preds):
+    ranks = rank_df.index.to_numpy()
+    scores = rank_df[allele].to_numpy()
+    return np.around(np.interp(preds, scores[::-1], ranks[::-1]), decimals=3)
+
+
 """""""""""""""""""""""""""""""""""""""""
 # Others
 """""""""""""""""""""""""""""""""""""""""

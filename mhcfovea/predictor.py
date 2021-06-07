@@ -257,6 +257,8 @@ def main(args=None):
         os.mkdir(output_dir)
 
     # data
+    rank_file = '../data/score_rank.csv'
+    rank_df = pd.read_csv(rank_file, index_col=0)
     db_file = '../data/interpretation.pkl'
     db = pickle.load(open(db_file, 'rb'))
     mhc_dict = db['seq']
@@ -338,6 +340,9 @@ def main(args=None):
         for allele in tqdm(alleles, desc='alleles', leave=False, position=0):
             pred_df = Pred(df, dataset, allele=allele)
             df[allele] = pred_df[list(Pred.models.keys())].mean(axis=1).round(3)
+
+            # %rank
+            df['{}_rank'.format(allele)] = AssignRank(rank_df, allele, df[allele])
             
             # interpretation
             Interp(allele)
@@ -351,8 +356,10 @@ def main(args=None):
         pred_df = Pred(df, dataset)
         df['score'] = pred_df[list(Pred.models.keys())].mean(axis=1).round(3)
 
-        # interpretation
+        # %rank & interpretation
+        df['rank'] = 0
         for allele, sub_df in df.groupby('mhc'):
+            df.loc[sub_df.index, 'rank'] = AssignRank(rank_df, allele, sub_df['score'])
             Interp(allele)
 
         # metrics
