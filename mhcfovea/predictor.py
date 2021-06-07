@@ -342,7 +342,7 @@ def main(args=None):
             df[allele] = pred_df[list(Pred.models.keys())].mean(axis=1).round(3)
 
             # %rank
-            df['{}_rank'.format(allele)] = AssignRank(rank_df, allele, df[allele])
+            df['{}_%rank'.format(allele)] = AssignRank(rank_df, allele, df[allele])
             
             # interpretation
             Interp(allele)
@@ -357,9 +357,9 @@ def main(args=None):
         df['score'] = pred_df[list(Pred.models.keys())].mean(axis=1).round(3)
 
         # %rank & interpretation
-        df['rank'] = 0
+        df['%rank'] = 0
         for allele, sub_df in df.groupby('mhc'):
-            df.loc[sub_df.index, 'rank'] = AssignRank(rank_df, allele, sub_df['score'])
+            df.loc[sub_df.index, '%rank'] = AssignRank(rank_df, allele, sub_df['score'])
             Interp(allele)
 
         # metrics

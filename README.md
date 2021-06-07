@@ -24,9 +24,13 @@ MHCfovea takes MHC-I alleles (all alleles in the IPD-IMGT/HLA database (version 
 If you find MHCfovea useful in your research please cite:
 <div>
   <i>Lee, K.-H., Chang, Y.-C., Chen, T.-F., Juan, H.-F., Tsai, H.-K., Chen, C.-Y.<sup>*</sup></i>
-  <b>Connecting MHC-I-binding motifs with HLA alleles via deep learning.</b> Manuscript submitted for publication
+  <b>Connecting MHC-I-binding motifs with HLA alleles via deep learning.</b> bioRxiv 2021.04.18.440359 (2021) doi:10.1101/2021.04.18.440359.
 </div>
 
+
+
+Ko-Han Lee, Yu-Chuan Chang, Ting-Fu Chen, Hsueh-Fen Juan, Huai-Kuang Tsai, Chien-Yu Chen
+bioRxiv 2021.04.18.440359; doi: https://doi.org/10.1101/2021.04.18.440359
 
 ## Installation
 1. Python3 is required
@@ -90,13 +94,13 @@ python3 mhcfovea/predictor.py example/input.csv example/output
 
 #### output file
 
-| sequence | mhc | score |
-|---|---|---|
-| PVPTYGLSV | B*07:02 | 0.606 |
-| APGARNTAAVL | B*07:02 | 0.987 |
-| SPAPPTCHEL | B*07:02 | 0.997 |
-| PGLAVKELK | B*07:02 | 0.569 |
-| GPMVAGGLL | B*07:02 | 0.966 |
+| sequence | mhc | score | %rank |
+|---|---|---|---|
+| PVPTYGLSV | B*07:02 | 0.606 | 0.616 |
+| APGARNTAAVL | B*07:02 | 0.987 | 0.015 |
+| SPAPPTCHEL | B*07:02 | 0.997 | 0.004 |
+| PGLAVKELK | B*07:02 | 0.569 | 0.692 |
+| GPMVAGGLL | B*07:02 | 0.966 | 0.024 |
 
 #### interpretation figure
 
