@@ -188,7 +188,7 @@ class Interpretation():
 
     def _mhcseq_plot(self, seqlogo_df, ax, ylim=1, title=None, turn_off_label=False):
         logo = lm.Logo(seqlogo_df, color_scheme='skylign_protein', ax=ax)
-        _ = ax.set_ylim(-ylim, ylim)
+        _ = ax.set_ylim(0, ylim)
         _ = ax.set_xticks(range(len(self.positions)))
         _ = ax.set_xticklabels([i+1 for i in self.positions], rotation=90)
         _ = ax.set_title(title, loc='left')
