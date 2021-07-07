@@ -1,4 +1,4 @@
-django==3.1.5
+django>=3.1.12
 gunicorn==20.0.4
 logomaker==0.8
 matplotlib==3.3.3
