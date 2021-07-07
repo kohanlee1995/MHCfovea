@@ -1,0 +1,328 @@
+* { 
+    touch-action: pan-y; 
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* navbar */
+.nav-title-logo {
+    height: 2rem;
+    margin: 0.5rem;
+}
+.nav-search-bar .form-control {
+    padding-left: 3.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid;
+}
+.nav-search-bar .form-control-feedback {
+    position: absolute;
+    z-index: 2;
+    display: block;
+    width: 3.5rem;
+    height: 3.5rem;
+    line-height: 3.5rem;
+    text-align: center;
+    pointer-events: none;
+    color: #aaa;
+}
+.nav-text-ailabs-red {
+    font-weight: 600;
+    color: #C13844;
+}
+.nav-text-ailabs-blue {
+    font-weight: 600;
+    color: #14709B;
+}
+
+.main {
+    padding-bottom: 2.5rem;
+}
+
+/* footer */
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 2.5rem;            /* Footer height */
+}
+
+/* index */
+
+.img-100 {
+    width: 100%;
+}
+
+.p-img {
+    text-align: center;
+}
+.home-img {
+    max-height: 60rem;
+}
+
+.text-ailabs-red {
+    color: #C13844;
+}
+.text-ailabs-blue {
+    color: #14709B;
+}
+
+.search-bar {
+    display: flex;
+    justify-content: center;
+    width: 50%;
+    margin-left: 25%;
+}
+
+.form-control::-webkit-input-placeholder {
+    color: #D0D0D0;
+    opacity: 1 !important;
+}
+
+.bg-gray {
+    background: #DDDDDD;
+}
+
+.pl-10 {
+    padding-left: 10rem;
+}
+.pr-10 {
+    padding-right: 10rem;
+}
+
+.ui-autocomplete {
+    height: 200px; 
+    overflow-y: scroll; 
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.radius {
+    border-radius: 0.5rem;
+}
+
+table {
+    table-layout: fixed;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+td {
+    width: 100%;
+    word-break: keep-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.info-td {
+    text-overflow: unset;
+}
+.moreinfo-content {
+    padding-top: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.docking-view-title {
+    font-size: 25px;
+    font-weight: 500;
+}
+.docking-view {
+    border: 1px solid #999999;
+    border-radius: 1rem;
+    min-height: 25rem;
+    margin: 5px;
+    padding: 0.5rem;
+}
+.docking {
+    min-height: 25rem;
+}
+.compound-view-title {
+    font-size: 25px;
+    font-weight: 500;
+}
+.compound-view {
+    border: 1px solid #999999;
+    border-radius: 1rem;
+    min-height: 25rem;
+    margin: 5px;
+    padding: 0.5rem;
+}
+.compound {
+    min-height: 25rem;
+}
+
+/* Protein sequence */
+.sequence-residue {
+    font-family: "Roboto Mono", monospace;
+    font-size: 8px;
+    width: 15px;
+    display: flex;
+    justify-content: center;
+    white-space: nowrap;
+    letter-spacing: -1px;
+    color: #888888;
+    -webkit-transform: scale(0.75)
+}
+.sequence-aa {
+    font-family: "Roboto Mono", monospace;
+    width: 15px;
+    border-top: 1px solid #888888;
+}
+
+/* Protein type */
+.protein {
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    font-size: small;
+}
+.protease {
+    background: #1976D2;
+    color: #FFFFFF;
+}
+.helicase {
+    background: #0097A7;
+    color: #FFFFFF;
+}
+.spike {
+    background: #00796B;
+    color: #FFFFFF;
+}
+.polymerase {
+    background: #283593;
+    color: #FFFFFF;
+}
+.ace2 {
+    background: #827717;
+    color: #FFFFFF;
+}
+.papainlike {
+    background: #FFD600;
+    color: #FFFFFF;
+}
+.spike_rbd {
+    background: #00796B;
+    color: #FFFFFF;
+}
+.nucleocapsid {
+    background: #E91E93;
+    color: #FFFFFF;
+}
+.tmprss2 {
+    background: #FF6F00;
+    color: #FFFFFF;
+}
+
+/* Drug Source */
+.drug-source {
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    margin: 0.2rem 0rem;
+    display: inline-block;
+    font-size: small;
+
+}
+.nhi {
+    background: #6b7ca5;
+    color: #FFFFFF;
+}
+.fda {
+    background: #68bc36;
+    color: #FFFFFF;
+}
+.l4200 {
+    background: #AA9922;
+    color: #FFFFFF;
+}
+
+/* More info card */
+.pubchem-card {
+    display: none;
+}
+
+.taiwannhi-card {
+    display: none;
+}
+.taiwannhi-no-data {
+    display: none;
+}
+
+.drugscreening-card {
+    display: none;
+}
+.drugscreening-no-data {
+    display: none;
+}
+
+.gseascore-card {
+    display: none;
+}
+.gseascore-no-data {
+    display: none;
+}
+
+.table-3-7 td:nth-child(1) {
+    width: 30%;
+}
+.table-3-7 td:nth-child(2) {
+    width: 70%;
+}
+
+
+.PASS {
+    background: #28a745;
+}
+.FAILED {
+    background: #dc3545;
+}
+
+#synonyms div.collapse:not(.show) {
+    height: 100px !important;
+    overflow: hidden;
+  
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;  
+}
+
+#synonyms div.collapsing {
+    min-height: 42px !important;
+}
+
+#synonyms a.collapsed:after  {
+    content: '+ Read More';
+}
+
+#synonyms a:not(.collapsed):after {
+    content: '- Read Less';
+}
+
+.tooltip .tooltip-inner { 
+    max-width: 1000px; 
+}
+
+.search-loading {
+  position: fixed;
+  display: none;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.3);
+  z-index: 2;
+  cursor: pointer;
+}
+
+.search-loading-spinner {
+  position: absolute;
+  top: 48%;
+  left: 48%;
+  width: 5rem;
+  height: 5rem;
+}

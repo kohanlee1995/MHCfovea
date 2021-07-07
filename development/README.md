@@ -128,32 +128,32 @@ python3 run_pan_allele.py \
 
 # Step 5: Analysis
 ## Data
-Compare the training data between different predictors.
-This is related to Supplementary Fig. 2 in the manuscript.
-[Data analysis](Analysis-data.ipynb)
+#### Compare the training data between different predictors.
+- This is related to Supplementary Fig. 2 in the manuscript.
+- [Data analysis](Analysis-data.ipynb)
 
 ## Performance
-Evaluate the performance of MHCfovea's predictor.
-This is related to Fig. 2 and Supplementary Fig. 3 in the manuscript.
-[Performance analysis](Analysis-performance.ipynb)
+#### Evaluate the performance of MHCfovea's predictor.
+- This is related to Fig. 2 and Supplementary Fig. 3 in the manuscript.
+- [Performance analysis](Analysis-performance.ipynb)
 
-Evaluate the memorization of MHCfovea's predictor.
-This is related to Supplementary Fig. 9 in the manuscript.
-[Memorization analysis](Analysis-memorization.ipynb)
+#### Evaluate the memorization of MHCfovea's predictor.
+- This is related to Supplementary Fig. 9 in the manuscript.
+- [Memorization analysis](Analysis-memorization.ipynb)
 
 ## ScoreCAM
-Evalute the result of ScoreCAM applied in MHCfovea.
-This is related to Fig. 3 and Supplementary Fig. 5 in the manuscript.
-[ScoreCAM analysis](Analysis-ScoreCAM.ipynb)
+#### Evalute the result of ScoreCAM applied in MHCfovea.
+- This is related to Fig. 3 and Supplementary Fig. 5 in the manuscript.
+- [ScoreCAM analysis](Analysis-ScoreCAM.ipynb)
 
 ## Summarization
-Summarize the result of allele expansion to reveal the connection between alleles and peptides.
-This is related to Fig. 4,5 and Supplementary Fig. 4,6,7,8 in the manuscript.
-[Summarization analysis](Analysis-summarization.ipynb)
+#### Summarize the result of allele expansion to reveal the connection between alleles and peptides.
+- This is related to Fig. 4,5 and Supplementary Fig. 4,6,7,8 in the manuscript.
+- [Summarization analysis](Analysis-summarization.ipynb)
 
-Analyze the HLA gorups with multi-cluster.
-This is related to Fig. 6 in the manuscript.
-[Multi-cluster analysis](Analysis-multicluster.ipynb)
+#### Analyze the HLA gorups with multi-cluster.
+- This is related to Fig. 6 in the manuscript.
+- [Multi-cluster analysis](Analysis-multicluster.ipynb)
 
 
 

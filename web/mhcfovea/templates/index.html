@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% include "header.html" %}
+    </head>
+    <script type="text/javascript">
+        function showloading(){
+          document.activeElement.blur();
+          document.getElementById('searchLoading').style.display = 'block';
+        }
+    </script>
+    <body>
+        {% include "navbar.html" with home="active" %}
+        <div class="container-fluid pt-5 main">
+            <div class="row mt-5 pt-3">
+                <div class="col-12 text-center">
+                    <h2>
+                        <span class="text-ailabs-blue">MHCfovea</span>
+                    </h2>
+                    
+                    <form action="{% url 'search' %}" method="get">
+                        <div class="input-group search-bar pt-2">
+                            <select class="selectpicker form-control" data-live-search="true" id="term" name="term">
+                                {% for allele in allele_list %}
+                                    <option data-tokens="{{ allele }}">{{ allele }}</option>
+                                {% endfor %}
+                            </select>
+
+
+                            <div class="input-group-append">
+                                <button class="btn btn-secondary" type="submit" onclick="showloading()">Search</button>
+                            </div>
+                            
+                            
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="jumbotron jumbotron-fluid bg-gray mt-5">
+                <div class="container">
+                    <p>
+                        MHCfovea integrates a supervised prediction module and an unsupervised summarization module to connect important residues to binding motifs.
+                    </p>
+
+                    <h4>
+                        Overview
+                    </h4>
+
+                    <p>
+                        First, the MHCfovea's predictor was trained on 150 observed alleles; 42 important positions were highlighted from MHC-I sequence (182 a.a.) using ScoreCAM. Next, we made predictions on 150 observed and 12,858 unobserved alleles against a peptide dataset (number: 254,742), and extracted positive predictions (score > 0.9) to generate the binding motif of an allele. Finally, after clustering the N- and C-terminal sub-motifs, we built hyper-motifs and the corresponding allele signatures based on 42 important positions to reveal the relation between binding motifs and MHC-I sequences.
+                    </p>
+
+                    <p class="p-img">
+                        <img src="data:img/png;base64, {{ overview }}" class="home-img" width="1000"/>
+                    </p>
+
+                    <h4>
+                        Application
+                    </h4>
+
+                    <p>
+                        MHCfovea takes MHC-I alleles (all alleles in the IPD-IMGT/HLA database (version 3.41.0) are available) and peptide sequences as inputs to predict the binding probability. For each queried allele, MHCfovea provides the cluster information and allele information of N- and C-terminal clusters respectively.
+
+                    <ul>
+                        <li>cluster information</li>
+                        <ul>
+                            <li>hyper-motif: the pattern of binding peptides in a specific cluster</li>
+                            <li>allele signature: the pattern of MHC-I alleles in a specific cluster</li>
+                        </ul>
+                        <li>allele information</li>
+                        <ul>
+                            <li>sub-motif: the binding sub-motif of the queried allele</li>
+                            <li>highlighted allele signature: the consensus residues of the allele signature and the queried allele</li>
+                        </ul>
+                    </ul>
+
+                    <p class="p-img">
+                        <img src="data:img/png;base64, {{ application }}" class="home-img" width="1000"/>
+                    </p>
+
+                </div>
+            </div>
+
+            <div class="row mt-3 mb-3">
+
+                <div class="col-12 text-left pl-10 pr-10 pb-3">
+                    <h5>
+                        <span class="text-ailabs-blue">Please cite our publication if you use MHCfovea.</span>
+                    </h5>
+                    <div class="bg-gray p-2 radius">
+                        <div>
+                            <i>Lee, K.-H., Chang, Y.-C., Chen, T.-F., Juan, H.-F., Tsai, H.-K., Chen, C.-Y.<sup>*</sup></i>
+                        </div>
+                        <div>
+                            <!--
+                            <a href="http://doi.org/10.1093/nar/gkaa861"><b>DockCoV2: a drug database against SARS-CoV-2.</b></a>
+                            Nucleic Acids Research 2020. 
+                            doi: 10.1093/nar/gkaa861.</div>-->
+                            <b>Connecting MHC-I-binding motifs with HLA alleles via deep learning. </b>bioRxiv 2021.04.18.440359 (2021) doi:10.1101/2021.04.18.440359.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="search-loading" id="searchLoading" style="display:none">
+                <div class="spinner-border search-loading-spinner text-light" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+
+
+
+        </div>
+        {% include "footer.html" %}
+    </body>
+</html>

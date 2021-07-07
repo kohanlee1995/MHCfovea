@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% include "header.html" %}
+    </head>
+    <body>
+        {% include "navbar.html" %}
+
+        <div class="container-fluid pt-5 mt-3 main">
+
+            <div class="row justify-content-center pt-3">
+                <div class="col-9">
+                    <h4>Allele: {{ allele }}</h4>
+                </div>
+            </div>
+
+            <div class="row justify-content-center pt-3">
+                <div class="col-9">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active" id="overview-tab" href="#overview" role="tab" data-toggle="tab" aria-controls="overview" aria-selected="true">Overview</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="n-terminal-tab" href="#n-terminal" role="tab" data-toggle="tab" aria-controls="n-terminal" aria-selected="false">N-terminal</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="c-terminal-tab" href="#c-terminal" role="tab" data-toggle="tab" aria-controls="c-terminal" aria-selected="false">C-terminal</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="myTabContent">
+                        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                            <!-- overview -->
+                            <div class="row p-1">
+                                <div class="col-12">
+                                    <img src="data:img/png;base64, {{ overview_image }}" class="img-100">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="n-terminal" role="tabpanel" aria-labelledby="n-terminal-tab">
+                            <div class="pt-3">
+                                <!-- cluster information of n terminal -->
+                                <h5>Cluster information</h5>
+                                <div class="row p-1">
+                                    <div class="col-2">
+                                        <h6>hyper-motif</h6>
+                                        <img src="data:img/png;base64, {{ detail_image.N.hyper_motif }}" class="img-100">
+                                    </div>
+                                    <div class="col-10">
+                                        <h6>allele signature</h6>
+                                        <img src="data:img/png;base64, {{ detail_image.N.allele_signature }}" class="img-100">
+                                    </div>
+                                </div>
+                                <!-- allele information of n terminal -->
+                                <h5>Allele information</h5>
+                                <div class="row p-1">
+                                    <div class="col-2">
+                                        <h6>sub-motif</h6>
+                                        <img src="data:img/png;base64, {{ detail_image.N.sub_motif }}" class="img-100">
+                                    </div>
+                                    <div class="col-10">
+                                        <h6>highlighted allele signature</h6>
+                                        <img src="data:img/png;base64, {{ detail_image.N.highlighted_allele_signature }}" class="img-100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="c-terminal" role="tabpanel" aria-labelledby="c-termninal-tab">
+                            <div class="pt-3">
+                                <!-- cluster information of c terminal -->
+                                <h5>Cluster information</h5>
+                                <div class="row p-1">
+                                    <div class="col-2">
+                                        <h6>hyper-motif</h6>
+                                        <img src="data:img/png;base64, {{ detail_image.C.hyper_motif }}" class="img-100">
+                                    </div>
+                                    <div class="col-10">
+                                        <h6>allele signature</h6>
+                                        <img src="data:img/png;base64, {{ detail_image.C.allele_signature }}" class="img-100">
+                                    </div>
+                                </div>
+                                <!-- allele information of c terminal -->
+                                <h5>Allele information</h5>
+                                <div class="row p-1">
+                                    <div class="col-2">
+                                        <h6>sub-motif</h6>
+                                        <img src="data:img/png;base64, {{ detail_image.C.sub_motif }}" class="img-100">
+                                    </div>
+                                    <div class="col-10">
+                                        <h6>highlighted allele signature</h6>
+                                        <img src="data:img/png;base64, {{ detail_image.C.highlighted_allele_signature }}" class="img-100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+        </div>
+
+
+        {% include "footer.html" %}
+    </body>
+</html>
