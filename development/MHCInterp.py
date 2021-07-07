@@ -301,7 +301,7 @@ class MHCInterp():
 
     def _submotif_clustering(self, motif_df, method, kwargs):
         # remove label column
-        cols = list(df.columns)
+        cols = list(motif_df.columns)
         new_cols = list()
         for col in cols:
             if ('label' in col) or ('group' in col):
@@ -482,11 +482,12 @@ class MHCInterp():
         seqlogo_df = self._mhc_seqlogo(alleles, positions)
         if diff_df.shape != (0,0):
             seqlogo_df = seqlogo_df - diff_df
+        seqlogo_df[seqlogo_df < 0] = 0 # revise: set the negative part as 0
 
         logo = lm.Logo(seqlogo_df, color_scheme='skylign_protein', ax=ax)
         
         if diff_df.shape != (0,0):
-            _ = ax.set_ylim(-ylim, ylim)
+            _ = ax.set_ylim(0, ylim) # revise: _=ax.set_ylim(-ylim, ylim)
         else:
             _ = ax.set_ylim(0, ylim)
         _ = ax.set_xticks(range(len(positions)))

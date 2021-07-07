@@ -46,9 +46,10 @@ class Masks():
                 self.mhc_masks = np.append(self.mhc_masks, mhc_masks, axis=0)
                 self.epitope_masks = np.append(self.epitope_masks, epitope_masks, axis=0)
         
-        if num != 0:    
+        if num != 0:
             self._plot_heatmap()
-            self._plot_clustermap()
+            if num > 1:
+                self._plot_clustermap()
             self._record()
     
     
@@ -112,7 +113,7 @@ def ArgumentParser():
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     data_args = parser.add_argument_group("Data Arguments")
-    data_args.add_argument('--mhc_file', required=True, help='MHCI binding domain encoding file')
+    data_args.add_argument('--mhc_encode_file', required=True, help='MHCI binding domain encoding file')
     data_args.add_argument('--dataframe_file', required=True, help='the dataframe file of peptides')
     data_args.add_argument('--dataset_file', required=True, help='the dataset file of peptides')
     data_args.add_argument('--predict_col', required=True, help='column name of the prediction')
@@ -146,7 +147,7 @@ if __name__ == '__main__':
     args = ArgumentParser().parse_args()
 
     # data
-    mhc_dict = np.load(args.mhc_file, allow_pickle=True)[()]
+    mhc_dict = np.load(args.mhc_encode_file, allow_pickle=True)[()]
     df = pd.read_csv(args.dataframe_file, index_col=0)
     dataset = torch.load(args.dataset_file)
     predict_col = args.predict_col

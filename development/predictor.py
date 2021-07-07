@@ -14,13 +14,13 @@ warnings.filterwarnings('ignore')
 
 
 class Predictor():
-    def __init__(self, mhc_encode_dict, model_file, model_state_files, encoding_method):
+    def __init__(self, mhc_encode_dict, model_file, model_state_files, encoding_method, cuda):
         # MHC binding domain encoding
         self.mhc_encode_dict = mhc_encode_dict
 
         # device: gpu or cpu
         if torch.cuda.is_available():
-            self.device = torch.device('cuda')
+            self.device = torch.device('cuda:%d'%cuda)
             self.batch_size = 4096
         else:
             self.device = torch.device('cpu')
@@ -224,6 +224,12 @@ def GetSeqlogoDF(seqs: pd.Series, sub_motif_len=4):
     return df
 
 
+def AssignRank(rank_df, allele, preds):
+    ranks = rank_df.index.to_numpy()
+    scores = rank_df[allele].to_numpy()
+    return np.around(np.interp(preds, scores[::-1], ranks[::-1]), decimals=3)
+
+
 def ArgumentParser():
     description = '''
     MHCfovea, an MHCI-peptide binding predictor. In this prediction process, GPU is recommended.
@@ -248,6 +254,7 @@ def ArgumentParser():
     
     data_args = parser.add_argument_group('Data Arguments')
     data_args.add_argument('--mhc_file', required=True, help='MHCI sequence file')
+    data_args.add_argument('--rank_file', required=True, help='reference for rank metric')
     data_args.add_argument('--peptide_dataframe', required=True, help='the input file')
     data_args.add_argument('--peptide_dataset', required=False, default=None, help='dataset file built from the "BuildDataset" function in "util.py", default=None')
     data_args.add_argument('--encoding_method', required=False, type=str, default='onehot', help='onehot or blosum, default=onehot')
@@ -259,6 +266,7 @@ def ArgumentParser():
     model_args.add_argument('--model_num', required=False, type=int, default=100, help='the number of model state used for prediction, default is all avaliable models')
     
     other_args = parser.add_argument_group('Other Arguments')
+    other_args.add_argument('--cuda', required=False, type=int, default=0, help='the number of cuda device')
     other_args.add_argument('--interpretation_file', required=False, default=None, help='the interpretation file; if none, no interpretation and motif.npy will be reported')
     other_args.add_argument('--output_dir', required=True, help='output directory')
     other_args.add_argument('--seqlogo_threshold', required=False, type=float, default=0.9, help='prediction threshold for building seqlogo dataframe, default=0.9')
@@ -276,6 +284,7 @@ def main(args=None):
 
     # data
     mhc_dict = json.load(open(args.mhc_file, 'r'))
+    rank_df = pd.read_csv(args.rank_file, index_col=0)
     peptide_dataframe = args.peptide_dataframe
     peptide_dataset = args.peptide_dataset
     encoding_method = args.encoding_method
@@ -286,6 +295,7 @@ def main(args=None):
     model_num = args.model_num
     
     # others
+    cuda = args.cuda
     output_dir = args.output_dir
     seqlogo_threshold = args.seqlogo_threshold
     positive_threshold = 10
@@ -358,7 +368,7 @@ def main(args=None):
     print("Predicting...")
 
     # predictor
-    Pred = Predictor(mhc_encode_dict, model_file, model_state_files, encoding_method)
+    Pred = Predictor(mhc_encode_dict, model_file, model_state_files, encoding_method, cuda)
 
     # interpretation
     Interp = Interpretation(args.interpretation_file, mhc_dict, '%s/interpretation'%output_dir)
@@ -372,6 +382,7 @@ def main(args=None):
         for allele in tqdm(alleles, desc='alleles', leave=False, position=0):
             pred_df = Pred(df, dataset, allele=allele)
             df[allele] = pred_df[list(Pred.models.keys())].mean(axis=1)
+            df['{}_%rank'.format(allele)] = AssignRank(rank_df, allele, df[allele])
             if save_tmp:
                 if get_metrics:
                     pred_df['bind'] = df['bind']
@@ -396,7 +407,9 @@ def main(args=None):
             pred_df.to_csv('%s/tmp_prediction.csv'%output_dir)
         
         # seqlogo
+        df['%rank'] = 0
         for allele, sub_df in df.groupby('mhc'):
+            df.loc[sub_df.index, '%rank'] = AssignRank(rank_df, allele, sub_df['score'])
             idx = np.where(sub_df['score'] > seqlogo_threshold)[0]
             if len(idx) >= positive_threshold:
                 seqlogo_dict[allele] = Interp(allele, sub_df.iloc[idx]['sequence']).values

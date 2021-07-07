@@ -17,9 +17,9 @@ def ArgumentParser():
     description = '''
     MHCI-peptide binding prediction - training
     [Restriction]
-    1. The length of peptide sequence must smaller than 15
+    1. The length of peptide sequence must smaller than or equal to 15
     2. Single decoy file is recommended for balancing the label
-    3. decoy_[n] and decoy_[n+20] which can't be used simultaneously have the same starting index
+    3. decoy_[n] and decoy_[n+30] which can't be used simultaneously have the same starting index
     4. GPU is recommended
     
     [Output]
@@ -52,6 +52,7 @@ def ArgumentParser():
 
     other_args = parser.add_argument_group('Other Arguments')
     other_args.add_argument('--output_dir', required=True, help='the major output directory')
+    other_args.add_argument('--cuda', required=False, type=int, default=0, help='the number of cuda device')
 
     return parser
 
@@ -87,7 +88,7 @@ if __name__ == "__main__":
 
     # default arguments
     valid_batch_size = 4096
-    device = (torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
+    device = (torch.device('cuda:{}'.format(args.cuda)) if torch.cuda.is_available() else torch.device('cpu'))
 
 
     """""""""""""""""""""""""""""""""""""""""

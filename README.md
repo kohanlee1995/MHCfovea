@@ -109,10 +109,13 @@ The folder of development contains all source codes for the development of MHCfo
 - build_dataset.py: for building training, validation, and benchmark dataset
 - util.py: utility functions for data analysis
 - trainer.py: for the training process
+- model.py: the model architecture
 - BA.py: utility functions for training process
 - predictor.py: for the prediction process
 - cam.py: functions for CAM algorithm
 - cam_run.py: for the CAM process
 - run_pan_allele.py: for the prediction on all HLA alleles
-- CAMInterp.py: utility functions for the interpretation of CAM results
+- CAMInterp.py: utility functions for the interpretation of ScoreCAM results
 - MHCInterp.py: utility functions for the summarization
+
+[Tutorial](development/README.md)
