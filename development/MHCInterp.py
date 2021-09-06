@@ -544,6 +544,7 @@ class MHCInterp():
                            yticklabels=False,
                            dendrogram_ratio=0.1,
                            figsize=(5,5))
+        _ = g.ax_heatmap.set_xlabel('Allele')                   
         
         plt.savefig(figfile, bbox_inches='tight', dpi=self.dpi)
         

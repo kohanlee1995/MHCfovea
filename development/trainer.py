@@ -77,7 +77,7 @@ if __name__ == "__main__":
     num_epochs = args.num_epochs
     optim_lr = args.optim_lr
     optim_weight_decay = args.optim_weight_decay
-    scheduler_milestones = list(map(float, args.scheduler_milestones.split(',')))
+    scheduler_milestones = [int(i*num_epochs) for i in list(map(float, args.scheduler_milestones.split(',')))]
 
     # others
     output_dir = args.output_dir
