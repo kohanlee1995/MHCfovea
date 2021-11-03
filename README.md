@@ -22,10 +22,19 @@ MHCfovea takes MHC-I alleles (all alleles in the IPD-IMGT/HLA database (version 
   - highlighted allele signature: the consensus residues of the allele signature and the queried allele
 
 If you find MHCfovea useful in your research please cite:
-<div>
-  <i>Lee, K.-H., Chang, Y.-C., Chen, T.-F., Juan, H.-F., Tsai, H.-K., Chen, C.-Y.<sup>*</sup></i>
-  <b>Connecting MHC-I-binding motifs with HLA alleles via deep learning.</b> bioRxiv 2021.04.18.440359 (2021) doi:10.1101/2021.04.18.440359.
-</div>
+```bibtex
+@article {MHCfovea_2021,
+title   = {Connecting {MHC}-{I}-binding motifs with {HLA} alleles via deep learning},
+author  = {Lee, Ko-Han and Chang, Yu-Chuan and Chen, Ting-Fu and Juan, Hsueh-Fen and Tsai, Huai-Kuang and Chen, Chien-Yu},
+journal = {Communications Biology},
+year    = {2021},
+volume  = {4},
+number  = {1},
+pages   = {1194},
+doi     = {10.1038/s42003-021-02716-8},
+issn    = {2399-3642}
+}
+```
 
 
 ## Installation
